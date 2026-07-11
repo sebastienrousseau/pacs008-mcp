@@ -17,8 +17,9 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.1** — nine MCP tools over stdio, all backed by the
-> `pacs008` library, for Python 3.10+.
+> **Latest release: v0.0.2** — 14 MCP tools over stdio, all backed by the
+> `pacs008` library, for Python 3.10+. Adds the November 2026 structured-address
+> cliff tools.
 
 ## Contents
 
@@ -26,6 +27,7 @@ messages, all from your favourite MCP client.
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Tools](#tools)
+- [November 2026 structured-address cliff](#november-2026-structured-address-cliff)
 - [Using the tools](#using-the-tools)
 - [Development](#development)
 - [Licence](#licence)
@@ -112,6 +114,24 @@ REST API.
 | `generate_message` | Generate a validated pacs XML message |
 | `validate_xml` | Validate a raw XML string against the bundled XSD |
 | `parse_message` | Parse & classify an inbound ISO 20022 message |
+| `classify_address` | Classify a postal address as structured / hybrid / unstructured |
+| `validate_address` | Validate one postal address against an address policy |
+| `repair_address` | Upgrade legacy unstructured address lines toward hybrid/structured form |
+| `validate_addresses` | Batch-validate every party address across payment rows |
+
+## November 2026 structured-address cliff
+
+On **14 November 2026**, fully unstructured postal addresses are decommissioned
+across SWIFT CBPR+, HVPS+, TARGET2 RTGS, CHAPS, Fedwire and Lynx — after that
+date, any cross-border or high-value payment carrying an unstructured-only
+postal address is **rejected at the rail**. The four address tools above wrap
+the `pacs008` library's `standards.address` module so an agent can get ahead of
+the deadline: `classify_address` shows where an address stands, `validate_address`
+/ `validate_addresses` enforce a policy (defaulting to the cliff rule
+`hybrid_or_structured`, which rejects unstructured addresses), and
+`repair_address` runs country-aware heuristics (`GB`, `US`, `DE`, `FR`, `JP`,
+plus a best-effort fallback) to lift legacy address lines into hybrid form.
+The repair step is experimental — audit its output before submitting downstream.
 
 ## Using the tools
 

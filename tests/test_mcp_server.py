@@ -41,6 +41,10 @@ EXPECTED_TOOLS = {
     "generate_message",
     "validate_xml",
     "parse_message",
+    "classify_address",
+    "validate_address",
+    "repair_address",
+    "validate_addresses",
 }
 
 
@@ -73,8 +77,9 @@ def test_server_and_main_are_well_formed():
 
 
 def test_all_tools_registered():
-    """All ten tools are registered on the server."""
+    """All fourteen tools are registered on the server."""
     assert _registered_tool_names() == EXPECTED_TOOLS
+    assert len(EXPECTED_TOOLS) == 14
 
 
 def test_message_type_param_exposes_enum():
@@ -357,6 +362,177 @@ def test_parse_message_serializes_bah(monkeypatch):
     assert result["envelope_wrapped"] is True
     assert result["bah"]["sender_bic"] == "DEUTDEFF"
     assert result["bah"]["msg_def_idr"] == "pacs.008.001.08"
+
+
+# ---------------------------------------------------------------------------
+# November 2026 structured-address tools
+# ---------------------------------------------------------------------------
+
+_STRUCTURED_ADDRESS = {
+    "strt_nm": "High Street",
+    "bldg_nb": "1",
+    "pst_cd": "AB1 2CD",
+    "twn_nm": "London",
+    "ctry": "GB",
+}
+_HYBRID_ADDRESS = {
+    "twn_nm": "London",
+    "ctry": "GB",
+    "adr_line": ["1 High Street"],
+}
+_UNSTRUCTURED_ADDRESS = {"adr_line": ["1 High Street", "London"]}
+
+
+def test_address_policy_param_exposes_enum():
+    """The address policy param surfaces the AddressPolicy values as enum."""
+    prop = _tool_input_schema("validate_address")["properties"]["policy"]
+    assert prop["enum"] == server._ADDRESS_POLICY_VALUES
+    assert set(prop["enum"]) == {
+        "unstructured_ok",
+        "hybrid_or_structured",
+        "structured_only",
+    }
+    # The default is the November 2026 cliff policy.
+    assert prop["default"] == "hybrid_or_structured"
+
+
+def test_classify_address_structured():
+    """A full structured address classifies as structured."""
+    result = server.classify_address(_STRUCTURED_ADDRESS)
+    assert result["classification"] == "structured"
+    assert result["is_structured"] is True
+    assert result["is_hybrid"] is False
+    assert result["is_unstructured"] is False
+    assert result["has_structured_fields"] is True
+
+
+def test_classify_address_hybrid():
+    """Town + country + one free-form line classifies as hybrid."""
+    result = server.classify_address(_HYBRID_ADDRESS)
+    assert result["classification"] == "hybrid"
+    assert result["is_hybrid"] is True
+
+
+def test_classify_address_unstructured():
+    """Free-form lines only classify as unstructured."""
+    result = server.classify_address(_UNSTRUCTURED_ADDRESS)
+    assert result["classification"] == "unstructured"
+    assert result["is_unstructured"] is True
+
+
+def test_classify_address_bad_country_returns_error():
+    """An invalid ISO country code returns an error dict (ValueError path)."""
+    result = server.classify_address({"twn_nm": "X", "ctry": "ZZ"})
+    assert "error" in result
+
+
+def test_classify_address_unknown_field_returns_error():
+    """An unknown field returns an error dict (TypeError path)."""
+    result = server.classify_address({"not_a_field": "x"})
+    assert "error" in result
+
+
+def test_validate_address_rejects_unstructured_under_cliff():
+    """An unstructured address is blocked under the default cliff policy."""
+    result = server.validate_address(_UNSTRUCTURED_ADDRESS)
+    assert result["policy"] == "hybrid_or_structured"
+    assert result["classification"] == "unstructured"
+    assert result["is_acceptable"] is False
+    assert result["findings"]
+    finding = result["findings"][0]
+    assert finding["severity"] == "block"
+    assert "unstructured" in finding["message"].lower()
+
+
+def test_validate_address_accepts_structured():
+    """A structured address is acceptable with no findings."""
+    result = server.validate_address(_STRUCTURED_ADDRESS)
+    assert result["is_acceptable"] is True
+    assert result["findings"] == []
+
+
+def test_validate_address_unstructured_ok_policy_accepts():
+    """The permissive policy accepts an unstructured address."""
+    result = server.validate_address(
+        _UNSTRUCTURED_ADDRESS, policy="unstructured_ok"
+    )
+    assert result["is_acceptable"] is True
+    assert result["findings"] == []
+
+
+def test_validate_address_invalid_policy_returns_error():
+    """An unknown policy returns an error dict, not an exception."""
+    result = server.validate_address(_STRUCTURED_ADDRESS, policy="nope")
+    assert "error" in result
+
+
+def test_validate_address_bad_address_returns_error():
+    """A malformed address returns an error dict (build failure path)."""
+    result = server.validate_address({"ctry": "ZZ"})
+    assert "error" in result
+
+
+def test_repair_address_upgrades_unstructured_to_hybrid():
+    """Legacy GB lines are repaired into a hybrid address."""
+    result = server.repair_address(
+        ["10 Downing Street", "London", "SW1A 2AA"], "GB"
+    )
+    assert result["classification"] == "hybrid"
+    assert result["is_hybrid"] is True
+    assert result["is_structured"] is False
+    addr = result["address"]
+    assert addr["twn_nm"] == "London"
+    assert addr["pst_cd"] == "SW1A 2AA"
+    assert addr["ctry"] == "GB"
+    assert isinstance(addr["adr_line"], list)
+    assert "10 Downing Street" in addr["adr_line"]
+
+
+def test_repair_address_bad_country_returns_error():
+    """An invalid country hint returns an error dict."""
+    result = server.repair_address(["1 High Street"], "ZZ")
+    assert "error" in result
+
+
+def test_validate_addresses_flags_unstructured_row():
+    """A payment row with an unstructured debtor address is flagged."""
+    rows = [
+        {
+            "debtor_address_adr_line_0": "1 High Street",
+            "debtor_address_adr_line_1": "London",
+        }
+    ]
+    result = server.validate_addresses(rows)
+    assert result["policy"] == "hybrid_or_structured"
+    assert result["is_valid"] is False
+    assert result["total"] == 1
+    err = result["errors"][0]
+    assert err["row"] == 0
+    assert err["party"] == "debtor"
+    assert err["severity"] == "block"
+    assert err["classification"] == "unstructured"
+
+
+def test_validate_addresses_clean_batch():
+    """A row with a structured creditor address passes validation."""
+    rows = [
+        {
+            "creditor_address_strt_nm": "High Street",
+            "creditor_address_bldg_nb": "1",
+            "creditor_address_twn_nm": "London",
+            "creditor_address_ctry": "GB",
+        }
+    ]
+    result = server.validate_addresses(rows)
+    assert result["is_valid"] is True
+    assert result["total"] == 1
+    assert result["errors"] == []
+
+
+def test_validate_addresses_invalid_policy_returns_error():
+    """An unknown policy returns an error dict, not an exception."""
+    result = server.validate_addresses([{}], policy="nope")
+    assert "error" in result
 
 
 # ---------------------------------------------------------------------------
