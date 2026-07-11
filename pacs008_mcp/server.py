@@ -63,6 +63,15 @@ from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pacs008.constants import valid_xml_types
 from pacs008.profiles import get_profile, list_profiles
+from pacs008.standards.address import (
+    AddressPolicy,
+    PostalAddress,
+    Severity,
+    from_unstructured,
+)
+from pacs008.standards.address import (
+    validate_addresses as _lib_validate_addresses,
+)
 from pacs008.validation.schema_validator import SchemaValidator
 from pacs008.xml.generate_xml import generate_xml_string
 from pacs008.xml.parser import parse
@@ -187,6 +196,47 @@ _Scheme = Annotated[
         json_schema_extra={"enum": _SCHEME_VALUES},
     ),
 ]
+
+# Address validation policy, derived from the pacs008 library's own
+# ``AddressPolicy`` enum (source of truth). ``hybrid_or_structured`` is the
+# November 14, 2026 cliff default: it rejects fully unstructured postal
+# addresses across SWIFT CBPR+, HVPS+, T2 RTGS, CHAPS, Fedwire and Lynx.
+_ADDRESS_POLICY_VALUES: list[str] = [policy.value for policy in AddressPolicy]
+_ADDRESS_POLICY_LIST = ", ".join(f"'{v}'" for v in _ADDRESS_POLICY_VALUES)
+_DEFAULT_ADDRESS_POLICY: str = AddressPolicy.HYBRID_OR_STRUCTURED.value
+
+_AddressPolicy = Annotated[
+    str,
+    Field(
+        description=(
+            "Postal-address validation policy. 'unstructured_ok' permits any "
+            "form (pre-cliff / generic); 'hybrid_or_structured' rejects fully "
+            "unstructured addresses (the SWIFT CBPR+ UG2026 default in force "
+            "from 14 November 2026); 'structured_only' requires full "
+            f"structured form. Must be one of: {_ADDRESS_POLICY_LIST}."
+        ),
+        json_schema_extra={"enum": _ADDRESS_POLICY_VALUES},
+    ),
+]
+
+
+def _build_address(address: dict) -> PostalAddress:
+    """Construct a ``PostalAddress`` from a snake_case field dict.
+
+    Raises ``ValueError``/``TypeError`` (e.g. bad country code, over-length
+    field, or an unknown key) which callers translate to an error payload.
+    """
+    return PostalAddress(**address)
+
+
+def _address_to_dict(address: PostalAddress) -> dict[str, Any]:
+    """Serialize a ``PostalAddress`` to a JSON-friendly dict.
+
+    ``adr_line`` (a tuple on the frozen dataclass) is emitted as a list.
+    """
+    data = dataclasses.asdict(address)
+    data["adr_line"] = list(data["adr_line"])
+    return data
 
 
 @server.tool(title="List pacs message types", annotations=_PURE_READ)
@@ -501,6 +551,210 @@ def parse_message(
         "namespace_uri": parsed.namespace_uri,
         "envelope_wrapped": parsed.envelope_wrapped,
         "bah": bah,
+    }
+
+
+# ---------------------------------------------------------------------------
+# November 2026 structured-address cliff tools.
+#
+# On 14 November 2026, fully unstructured postal addresses are decommissioned
+# across SWIFT CBPR+, HVPS+, T2 RTGS, CHAPS, Fedwire and Lynx: any high-value
+# or cross-border payment carrying an unstructured-only address is rejected at
+# the rail. These tools wrap the pacs008 library's ``standards.address`` module
+# so agents can classify, validate and repair addresses ahead of the cliff.
+# ---------------------------------------------------------------------------
+
+_ADDRESS_DICT_FIELD = Annotated[
+    dict,
+    Field(
+        description=(
+            "An ISO 20022 PostalAddress27 as a dict of snake_case fields, e.g. "
+            "{'strt_nm': 'High St', 'bldg_nb': '1', 'pst_cd': 'AB1 2CD', "
+            "'twn_nm': 'London', 'ctry': 'GB'} and optional 'adr_line' (list "
+            "of free-form lines). 'ctry' must be ISO 3166-1 alpha-2."
+        )
+    ),
+]
+
+
+@server.tool(title="Classify a postal address", annotations=_PURE_READ)
+def classify_address(address: _ADDRESS_DICT_FIELD) -> dict:
+    """Classify a postal address as structured, hybrid, or unstructured.
+
+    Use this to see where an address stands against the 14 November 2026 SWIFT
+    cliff: ``structured`` (town + country + structured detail, no free-form
+    lines), ``hybrid`` (town + country + 1-2 free-form ``adr_line`` lines, the
+    minimum CBPR+ UG2026 bar), or ``unstructured`` (free-form only — rejected
+    from the cliff date). To check acceptability under a policy use
+    ``validate_address``; to upgrade legacy lines use ``repair_address``.
+
+    Returns ``{"classification": str, "is_structured": bool, "is_hybrid":
+    bool, "is_unstructured": bool, "has_structured_fields": bool}`` or an
+    ``{"error": ...}`` payload.
+
+    Args:
+        address: The postal address as a dict of snake_case fields.
+    """
+    try:
+        addr = _build_address(address)
+    except (ValueError, TypeError) as exc:
+        return {"error": str(exc)}
+    return {
+        "classification": addr.classify().value,
+        "is_structured": addr.is_structured(),
+        "is_hybrid": addr.is_hybrid(),
+        "is_unstructured": addr.is_unstructured(),
+        "has_structured_fields": addr.has_structured_fields,
+    }
+
+
+@server.tool(title="Validate a postal address", annotations=_PURE_READ)
+def validate_address(
+    address: _ADDRESS_DICT_FIELD,
+    policy: _AddressPolicy = _DEFAULT_ADDRESS_POLICY,
+) -> dict:
+    """Validate one postal address against an address policy.
+
+    Use this to decide whether an address will clear a rail. The default
+    ``hybrid_or_structured`` policy is the November 14, 2026 cliff rule
+    (SWIFT CBPR+, HVPS+, T2 RTGS, CHAPS, Fedwire, Lynx): it rejects fully
+    unstructured addresses. Findings mirror the library's pipeline severity
+    (a policy rejection is a blocking finding).
+
+    Returns ``{"policy": str, "classification": str, "is_acceptable": bool,
+    "findings": [{"severity": str, "message": str}, ...]}`` or an
+    ``{"error": ...}`` payload.
+
+    Args:
+        address: The postal address as a dict of snake_case fields.
+        policy: The validation policy to enforce (see the enum values).
+    """
+    try:
+        resolved = AddressPolicy(policy)
+    except ValueError:
+        return {"error": f"Invalid policy: {policy!r}"}
+    try:
+        addr = _build_address(address)
+    except (ValueError, TypeError) as exc:
+        return {"error": str(exc)}
+
+    reason = addr.validate(resolved)
+    findings = (
+        [{"severity": Severity.BLOCK.value, "message": reason}]
+        if reason is not None
+        else []
+    )
+    return {
+        "policy": resolved.value,
+        "classification": addr.classify().value,
+        "is_acceptable": reason is None,
+        "findings": findings,
+    }
+
+
+@server.tool(title="Repair an unstructured address", annotations=_PURE_READ)
+def repair_address(
+    lines: Annotated[
+        list[str],
+        Field(
+            description=(
+                "Legacy unstructured address lines (free-form). Empty or "
+                "whitespace-only lines are skipped."
+            )
+        ),
+    ],
+    country: Annotated[
+        str,
+        Field(
+            description=(
+                "ISO 3166-1 alpha-2 country code (e.g. 'GB', 'US', 'DE', "
+                "'FR', 'JP') used to drive country-aware repair heuristics."
+            )
+        ),
+    ],
+) -> dict:
+    """Upgrade legacy unstructured address lines toward hybrid/structured form.
+
+    Experimental country-aware repair (``GB``, ``US``, ``DE``, ``FR``, ``JP``
+    have dedicated heuristics; other countries get a best-effort pass promoting
+    the last line to a town). Use this to lift pre-cliff data over the
+    November 14, 2026 bar; audit the output before submitting, and keep both
+    the original and derived address in your audit trail.
+
+    Returns ``{"address": {...}, "classification": str, "is_structured":
+    bool, "is_hybrid": bool}`` (so you can see the unstructured -> hybrid /
+    structured upgrade) or an ``{"error": ...}`` payload.
+
+    Args:
+        lines: Legacy unstructured address lines.
+        country: ISO 3166-1 alpha-2 country code driving the heuristics.
+    """
+    try:
+        addr = from_unstructured(lines, country)
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {
+        "address": _address_to_dict(addr),
+        "classification": addr.classify().value,
+        "is_structured": addr.is_structured(),
+        "is_hybrid": addr.is_hybrid(),
+    }
+
+
+@server.tool(
+    title="Validate addresses in payment rows", annotations=_PURE_READ
+)
+def validate_addresses(
+    addresses: Annotated[
+        list[dict],
+        Field(
+            description=(
+                "Payment-row dicts. The pipeline scans each row for columns of "
+                "the form '{party}_address_{field}' (party in debtor, creditor, "
+                "debtor_agent, creditor_agent, ultimate_debtor, "
+                "ultimate_creditor; field a snake_case PostalAddress field such "
+                "as twn_nm/ctry/strt_nm or adr_line_0..adr_line_6) and "
+                "validates each party's address."
+            )
+        ),
+    ],
+    policy: _AddressPolicy = _DEFAULT_ADDRESS_POLICY,
+) -> dict:
+    """Batch-validate every party address across a list of payment rows.
+
+    Use this before ``generate_message`` to catch addresses that will be
+    rejected at the rail. The default ``hybrid_or_structured`` policy enforces
+    the November 14, 2026 cliff. Each finding is reported per offending
+    ``(row, party)`` pair.
+
+    Returns ``{"policy": str, "is_valid": bool, "total": int, "errors":
+    [{"row": int, "party": str, "severity": str, "message": str,
+    "classification": str}, ...]}`` or an ``{"error": ...}`` payload.
+
+    Args:
+        addresses: One or more payment-row dicts (see the field description).
+        policy: The validation policy to enforce (see the enum values).
+    """
+    try:
+        resolved = AddressPolicy(policy)
+    except ValueError:
+        return {"error": f"Invalid policy: {policy!r}"}
+
+    errors = _lib_validate_addresses(addresses, resolved)
+    return {
+        "policy": resolved.value,
+        "is_valid": not errors,
+        "total": len(addresses),
+        "errors": [
+            {
+                "row": err.row,
+                "party": err.party,
+                "severity": err.severity.value,
+                "message": err.message,
+                "classification": err.classification.value,
+            }
+            for err in errors
+        ],
     }
 
 

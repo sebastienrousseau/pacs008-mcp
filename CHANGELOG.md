@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.2] - 2026-07-12
+
+### Added
+
+- Four **November 2026 structured-address cliff** tools, each a thin wrapper
+  over the `pacs008` library's `standards.address` module. From 14 November
+  2026, fully unstructured postal addresses are rejected across SWIFT CBPR+,
+  HVPS+, T2 RTGS, CHAPS, Fedwire and Lynx; these tools let agents get ahead of
+  the deadline:
+  - `classify_address` — classify a postal address as structured / hybrid /
+    unstructured (wraps `PostalAddress.classify` and its `is_*` predicates)
+  - `validate_address` — validate one address against an address policy,
+    defaulting to the 14 November 2026 cliff rule (wraps
+    `PostalAddress.validate`)
+  - `repair_address` — country-aware upgrade of legacy unstructured address
+    lines toward hybrid/structured form (wraps `from_unstructured`)
+  - `validate_addresses` — batch-validate every party address across payment
+    rows (wraps `validate_addresses`)
+- `policy` value-constraint enum on the address tools, surfaced as JSON Schema
+  `enum` metadata derived from the library's `AddressPolicy` enum
+  (`unstructured_ok`, `hybrid_or_structured`, `structured_only`), defaulting to
+  `hybrid_or_structured` — the cliff policy.
+
+### Changed
+
+- The MCP server now exposes **14 tools** (was 10).
+- Bumped the minimum `pacs008` dependency to `>=0.0.4` — the first published
+  PyPI release whose `standards.address` module backs the new tools.
+
 ## [0.0.1] - 2026-07-11
 
 ### Added
@@ -40,4 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[0.0.2]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.2
 [0.0.1]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.1
