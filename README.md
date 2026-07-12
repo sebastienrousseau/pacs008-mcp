@@ -17,9 +17,9 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.2** — 14 MCP tools over stdio, all backed by the
-> `pacs008` library, for Python 3.10+. Adds the November 2026 structured-address
-> cliff tools.
+> **Latest release: v0.0.4** — 15 MCP tools over stdio, all backed by the
+> `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
+> MT103 → pacs.008 (MT→MX) migration path.
 
 ## Contents
 
@@ -114,6 +114,7 @@ REST API.
 | `generate_message` | Generate a validated pacs XML message |
 | `validate_xml` | Validate a raw XML string against the bundled XSD |
 | `parse_message` | Parse & classify an inbound ISO 20022 message |
+| `convert_mt103` | Convert a legacy SWIFT MT103 into pacs.008-ready records (MT→MX migration) |
 | `classify_address` | Classify a postal address as structured / hybrid / unstructured |
 | `validate_address` | Validate one postal address against an address policy |
 | `repair_address` | Upgrade legacy unstructured address lines toward hybrid/structured form |
