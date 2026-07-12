@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-07-12
+
+### Added
+
+- `convert_mt103` tool — convert a legacy SWIFT **MT103** (single customer
+  credit transfer) into **pacs.008-ready flat records** that can be fed
+  straight into `validate_records` / `generate_message`. This is the SWIFT
+  MT-to-MX migration path (correspondent-banking MT103 coexistence with ISO
+  20022 ends November 2025). The tool is a thin wrapper over the
+  [`pacs008-loader-mt103`](https://github.com/sebastienrousseau/pacs008-loader-mt103)
+  library's `parse_mt103`; it does no file I/O and returns
+  `{"message_type": "pacs.008.001.08", "records": [...]}`, or an
+  `{"error": ...}` payload on a missing-mandatory-field / malformed MT103.
+
+### Changed
+
+- The MCP server now exposes **15 tools** (was 14).
+- Added a runtime dependency on `pacs008-loader-mt103` (`>=0.0.1`).
+
 ## [0.0.3] - 2026-07-12
 
 ### Security
@@ -76,5 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[0.0.4]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.4
+[0.0.3]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.3
 [0.0.2]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.2
 [0.0.1]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.1

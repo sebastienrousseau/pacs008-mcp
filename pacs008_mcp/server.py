@@ -76,6 +76,7 @@ from pacs008.validation.schema_validator import SchemaValidator
 from pacs008.xml.generate_xml import generate_xml_string
 from pacs008.xml.parser import parse
 from pacs008.xml.validate_via_xsd import validate_xml_string_via_xsd
+from pacs008_loader_mt103.loader import parse_mt103
 from pydantic import Field
 
 from pacs008_mcp import __version__
@@ -552,6 +553,42 @@ def parse_message(
         "envelope_wrapped": parsed.envelope_wrapped,
         "bah": bah,
     }
+
+
+@server.tool(title="Convert MT103 to pacs.008 records", annotations=_PURE_READ)
+def convert_mt103(
+    mt103_text: Annotated[
+        str,
+        Field(
+            description=(
+                "A legacy SWIFT MT103 (single customer credit transfer) "
+                "payload as text. A raw '{4:...-}' block-4 envelope, trailing "
+                "whitespace and CRLF/LF differences are tolerated."
+            )
+        ),
+    ],
+) -> dict:
+    """Convert a legacy SWIFT MT103 into pacs.008-ready flat records.
+
+    This is the SWIFT MT-to-MX migration path (correspondent-banking MT103
+    coexistence with ISO 20022 ends November 2025): parse an MT103 text
+    payload and get back the flat pacs.008 record(s) that can be fed straight
+    into ``validate_records`` / ``generate_message``. An MT103 carries exactly
+    one transfer, so the ``records`` list always holds a single record. No
+    file is read or written.
+
+    Returns ``{"message_type": "pacs.008.001.08", "records": [{...}]}`` with
+    the parsed flat record, or an ``{"error": ...}`` payload if the MT103 is
+    missing a mandatory field (``:20:``, ``:32A:``, beneficiary) or malformed.
+
+    Args:
+        mt103_text: The MT103 payload as a string.
+    """
+    try:
+        records = parse_mt103(mt103_text)
+    except ValueError as exc:
+        return {"error": str(exc)}
+    return {"message_type": "pacs.008.001.08", "records": records}
 
 
 # ---------------------------------------------------------------------------

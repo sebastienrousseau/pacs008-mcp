@@ -41,6 +41,7 @@ EXPECTED_TOOLS = {
     "generate_message",
     "validate_xml",
     "parse_message",
+    "convert_mt103",
     "classify_address",
     "validate_address",
     "repair_address",
@@ -77,9 +78,9 @@ def test_server_and_main_are_well_formed():
 
 
 def test_all_tools_registered():
-    """All fourteen tools are registered on the server."""
+    """All fifteen tools are registered on the server."""
     assert _registered_tool_names() == EXPECTED_TOOLS
-    assert len(EXPECTED_TOOLS) == 14
+    assert len(EXPECTED_TOOLS) == 15
 
 
 def test_message_type_param_exposes_enum():
@@ -362,6 +363,84 @@ def test_parse_message_serializes_bah(monkeypatch):
     assert result["envelope_wrapped"] is True
     assert result["bah"]["sender_bic"] == "DEUTDEFF"
     assert result["bah"]["msg_def_idr"] == "pacs.008.001.08"
+
+
+# ---------------------------------------------------------------------------
+# convert_mt103
+# ---------------------------------------------------------------------------
+
+# A realistic, complete MT103 covering every mapped field (mirrors the
+# pacs008-loader-mt103 library's own `_full_mt103` test fixture).
+_FULL_MT103 = (
+    ":20:REF20240712001\n"
+    ":23B:CRED\n"
+    ":32A:260712EUR12345,67\n"
+    ":50K:/DE89370400440532013000\n"
+    "JOHN DOE\n"
+    "123 MAIN STREET\n"
+    "BERLIN\n"
+    ":52A:DEUTDEFF\n"
+    ":57A:CHASUS33\n"
+    ":59:/GB29NWBK60161331926819\n"
+    "ACME TRADING LTD\n"
+    "1 CORPORATE AVENUE\n"
+    "LONDON\n"
+    ":70:INVOICE 998877\n"
+    ":71A:SHA\n"
+)
+
+
+def test_convert_mt103_maps_expected_pacs008_record():
+    """A complete MT103 converts to the expected single pacs.008 record."""
+    result = server.convert_mt103(_FULL_MT103)
+    assert result["message_type"] == MSG_TYPE
+    assert result["records"] == [
+        {
+            "msg_id": "REF20240712001",
+            "end_to_end_id": "REF20240712001",
+            "creation_date_time": "2026-07-12T00:00:00",
+            "nb_of_txs": 1,
+            "settlement_method": "CLRG",
+            "interbank_settlement_amount": 12345.67,
+            "interbank_settlement_currency": "EUR",
+            "charge_bearer": "SHAR",
+            "debtor_name": "JOHN DOE",
+            "debtor_agent_bic": "DEUTDEFF",
+            "creditor_agent_bic": "CHASUS33",
+            "creditor_name": "ACME TRADING LTD",
+        }
+    ]
+
+
+def test_convert_mt103_record_is_schema_valid():
+    """The converted record validates against the pacs.008 JSON Schema.
+
+    The KEY correctness proof: the MT103 output is fed straight into the
+    server's own ``validate_records`` tool and comes back clean, so it can
+    drive ``generate_message`` unchanged.
+    """
+    result = server.convert_mt103(_FULL_MT103)
+    report = server.validate_records(MSG_TYPE, result["records"])
+    assert report["is_valid"] is True
+    assert report["total"] == 1
+    assert report["valid"] == 1
+    assert report["errors"] == []
+
+
+def test_convert_mt103_output_generates_xml():
+    """The converted record drives generate_message to a validated document."""
+    result = server.convert_mt103(_FULL_MT103)
+    xml = server.generate_message(MSG_TYPE, result["records"])
+    assert xml.lstrip().startswith("<?xml")
+    assert "Document" in xml
+
+
+def test_convert_mt103_malformed_returns_error():
+    """An MT103 missing a mandatory field returns an ``{"error": ...}`` dict."""
+    result = server.convert_mt103(":23B:CRED\n")
+    assert isinstance(result, dict)
+    assert "error" in result
+    assert "records" not in result
 
 
 # ---------------------------------------------------------------------------
