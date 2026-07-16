@@ -102,23 +102,21 @@ client's configuration:
 All tools wrap the `pacs008` library, so they behave identically to the CLI and
 REST API.
 
-| Tool | Purpose |
-|------|---------|
-| `list_message_types` | List the 20 supported ISO 20022 pacs message types |
-| `list_schemes` | List the registered scheme / usage-guideline profiles |
-| `get_scheme` | Inspect a scheme profile's rules |
-| `get_required_fields` | Required input fields for a message type |
-| `get_input_schema` | Full input JSON Schema for a message type |
-| `validate_records` | Validate flat records against a message type's schema |
-| `validate_scheme` | Validate records against a scheme's usage guidelines |
-| `generate_message` | Generate a validated pacs XML message |
-| `validate_xml` | Validate a raw XML string against the bundled XSD |
-| `parse_message` | Parse & classify an inbound ISO 20022 message |
-| `convert_mt103` | Convert a legacy SWIFT MT103 into pacs.008-ready records (MT→MX migration) |
-| `classify_address` | Classify a postal address as structured / hybrid / unstructured |
-| `validate_address` | Validate one postal address against an address policy |
-| `repair_address` | Upgrade legacy unstructured address lines toward hybrid/structured form |
-| `validate_addresses` | Batch-validate every party address across payment rows |
+- `list_message_types` — List the 20 supported ISO 20022 pacs message types
+- `list_schemes` — List the registered scheme / usage-guideline profiles
+- `get_scheme` — Inspect a scheme profile's rules
+- `get_required_fields` — Required input fields for a message type
+- `get_input_schema` — Full input JSON Schema for a message type
+- `validate_records` — Validate flat records against a message type's schema
+- `validate_scheme` — Validate records against a scheme's usage guidelines
+- `generate_message` — Generate a validated pacs XML message
+- `validate_xml` — Validate a raw XML string against the bundled XSD
+- `parse_message` — Parse & classify an inbound ISO 20022 message
+- `convert_mt103` — Convert a legacy SWIFT MT103 into pacs.008-ready records (MT→MX migration)
+- `classify_address` — Classify a postal address as structured / hybrid / unstructured
+- `validate_address` — Validate one postal address against an address policy
+- `repair_address` — Upgrade legacy unstructured address lines toward hybrid/structured form
+- `validate_addresses` — Batch-validate every party address across payment rows
 
 ## November 2026 structured-address cliff
 
