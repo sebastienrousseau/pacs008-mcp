@@ -17,7 +17,7 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.4** — 15 MCP tools over stdio, all backed by the
+> **Latest release: v0.0.5** — 15 MCP tools over stdio, all backed by the
 > `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
 > MT103 → pacs.008 (MT→MX) migration path.
 

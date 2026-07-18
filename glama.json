@@ -4,7 +4,7 @@
   "title": "pacs008-mcp",
   "display_name": "Pacs008 MCP",
   "description": "Model Context Protocol server for the pacs008 ISO 20022 FI-to-FI Customer Credit Transfer library. Exposes tools for generating, validating, and parsing pacs.008 payment messages, scheme-profile (CBPR+, HVPS+, Fedwire, CHAPS, T2 RTGS, SCT Inst) rule introspection and validation, and XSD-based XML validation. Part of the ISO 20022 MCP Suite.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "repository": "https://github.com/sebastienrousseau/pacs008-mcp",
   "homepage": "https://pacs008.com",
   "license": "Apache-2.0",
