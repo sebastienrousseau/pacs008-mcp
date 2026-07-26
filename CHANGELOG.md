@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2026-07-26
+
+### Added
+
+- **PEP 561 `py.typed` marker** (`pacs008_mcp/py.typed`), wired into the
+  Poetry `include` list and verified present in the built wheel. The server
+  is `mypy --strict` clean but previously shipped no marker, so downstream
+  consumers received none of its annotations.
+- **Regression test** (`tests/test_py_typed_marker.py`) that fails before a
+  release ships if the marker is dropped from source or packaging.
+
+### Changed
+
+- Version `0.0.5` → `0.0.6`.
+
 ## [0.0.5] - 2026-07-18
 
 ### Changed
@@ -103,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[0.0.6]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.6
 [0.0.5]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.5
 [0.0.4]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.4
 [0.0.3]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.3
