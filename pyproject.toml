@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pacs008-mcp"
-version = "0.0.5"
+version = "0.0.6"
 description = "Model Context Protocol (MCP) server exposing the pacs008 ISO 20022 FI-to-FI Customer Credit Transfer library as agent tools."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -9,6 +9,9 @@ repository = "https://github.com/sebastienrousseau/pacs008-mcp"
 homepage = "https://pacs008.com"
 packages = [
     { include = "pacs008_mcp" },
+]
+include = [
+    "pacs008_mcp/py.typed",
 ]
 
 [tool.poetry.scripts]
