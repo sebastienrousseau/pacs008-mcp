@@ -21,7 +21,7 @@ pacs008-mcp = "pacs008_mcp.server:main"
 python = ">=3.10,<4.0"
 pacs008 = ">=0.0.7"
 pacs008-loader-mt103 = ">=0.0.1"
-mcp = ">=1.2"
+mcp = ">=1.2,<2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0.0"
