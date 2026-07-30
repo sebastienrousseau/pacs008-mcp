@@ -795,6 +795,122 @@ def validate_addresses(
     }
 
 
+# ---------------------------------------------------------------------------
+# MCP resources + prompt (the "Trinity" alongside the tools).
+#
+# Resources expose the same source-of-truth catalogues the reader tools return,
+# so an agent can pin them as stable reference context without a tool call. The
+# prompt teaches the recommended tool order for building/validating a pacs.008.
+# Each function reuses the tool functions above verbatim -- no domain logic is
+# reimplemented here.
+# ---------------------------------------------------------------------------
+
+
+@server.resource(
+    "pacs008://message-types", title="pacs message-type catalogue"
+)
+def message_types_resource() -> str:
+    """Expose the supported pacs message types as a JSON resource.
+
+    Returns the same catalogue as the ``list_message_types`` tool -- each
+    supported ISO 20022 pacs ``message_type`` and its human name -- serialised
+    as JSON, so an agent can load the accepted type set as reference context
+    without a tool call. Mirrors ``list_message_types``, which takes no
+    arguments and cannot fail, so no error envelope is needed.
+    """
+    return json.dumps(list_message_types())
+
+
+@server.resource("pacs008://schemes", title="Scheme profile catalogue")
+def schemes_resource() -> str:
+    """Expose the registered scheme / usage-guideline profiles as JSON.
+
+    Returns the same catalogue as the ``list_schemes`` tool -- each canonical
+    rail profile (CBPR+, HVPS+, Fedwire, CHAPS, T2 RTGS, SCT Inst, generic) --
+    serialised as JSON, so an agent can load the accepted scheme set as
+    reference context without a tool call. Mirrors ``list_schemes``, which
+    takes no arguments and cannot fail, so no error envelope is needed.
+    """
+    return json.dumps(list_schemes())
+
+
+@server.resource("pacs008://scheme/{scheme_id}", title="Scheme profile rules")
+def scheme_resource(
+    scheme_id: Annotated[
+        str,
+        Field(
+            description=(
+                "A registered scheme / usage-guideline profile name "
+                "(case-insensitive), e.g. 'cbpr_plus', 'fedwire', 'chaps' "
+                "(see list_schemes / the pacs008://schemes resource)."
+            )
+        ),
+    ],
+) -> str:
+    """Expose one scheme profile's rule attributes as a templated JSON resource.
+
+    A templated MCP Resource returning the same payload as the ``get_scheme``
+    tool for a single scheme: the UETR requirement, permitted charge bearers,
+    remittance-info length cap, per-message transaction cardinality, pinned
+    message versions, and LEI-required parties. Lets an agent pin
+    ``pacs008://scheme/cbpr_plus`` as stable reference context for the rail it
+    is building against. An unknown ``scheme_id`` yields the same
+    ``{"error": ...}`` payload as ``get_scheme`` (serialised), so no separate
+    error handling is added here.
+
+    Args:
+        scheme_id: A registered scheme profile name (see ``list_schemes``).
+    """
+    return json.dumps(get_scheme(scheme_id))
+
+
+@server.prompt(title="Build a pacs.008 message")
+def build_pacs008_message(
+    goal: Annotated[
+        str,
+        Field(
+            description=(
+                "The payments task in plain language, e.g. 'send a EUR "
+                "customer credit transfer over CBPR+' or 'migrate this MT103 "
+                "to pacs.008'."
+            )
+        ),
+    ] = "",
+) -> str:
+    """Guided prompt teaching the recommended tool order for a pacs.008.
+
+    The MCP client sends this to the model to establish the correct
+    build-and-validate sequence so it uses the server's tools in order instead
+    of guessing a message type or skipping a validation gate.
+
+    Args:
+        goal: The payments task in plain language.
+
+    Returns:
+        A prompt string instructing the model how to proceed.
+    """
+    goal_line = (
+        f' The task is: "{goal.strip()}".' if goal and goal.strip() else ""
+    )
+    return (
+        f"You have the pacs008 ISO 20022 server.{goal_line} Work in this "
+        "order: call list_message_types() to confirm the exact message_type "
+        "(or read the pacs008://message-types resource). If you are starting "
+        "from a legacy SWIFT MT103, call convert_mt103(mt103_text) to get the "
+        "flat pacs.008 record(s). Call get_required_fields(message_type) and "
+        "get_input_schema(message_type) to learn the fields, then assemble one "
+        "flat record per instruction. Check structural shape with "
+        "validate_records(message_type, records); check the rail's rulebook "
+        "with validate_scheme(scheme, records) after inspecting get_scheme("
+        "scheme) (or the pacs008://scheme/{scheme_id} resource); and check "
+        "party addresses against the 14 November 2026 structured-address cliff "
+        "with validate_addresses(addresses). Only once all checks pass, call "
+        "generate_message(message_type, records) for the XSD-validated XML. To "
+        "verify an externally produced document use validate_xml(message_type, "
+        "xml); to classify an inbound message use parse_message(xml)."
+    )
+
+
 def main() -> None:
     """Run the Pacs008 MCP server over stdio (the ``pacs008-mcp`` entry point)."""
     server.run()
