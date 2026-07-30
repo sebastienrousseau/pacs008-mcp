@@ -642,3 +642,95 @@ def test_call_tool_through_fastmcp():
     # FastMCP wraps a bare list return under a "result" key.
     schemes = payload["result"] if isinstance(payload, dict) else payload
     assert any(s["scheme"] == "cbpr_plus" for s in schemes)
+
+
+# ---------------------------------------------------------------------------
+# MCP Trinity: resources + prompt
+# ---------------------------------------------------------------------------
+
+
+def _registered_prompt_names() -> set[str]:
+    """Return the names of every prompt registered on the server."""
+    return {p.name for p in server.server._prompt_manager.list_prompts()}
+
+
+def _registered_resource_uris() -> set[str]:
+    """Return the URIs of every static resource registered on the server."""
+    return {
+        str(r.uri) for r in server.server._resource_manager.list_resources()
+    }
+
+
+def _registered_resource_templates() -> set[str]:
+    """Return the URI templates of every templated resource on the server."""
+    return {
+        t.uri_template
+        for t in server.server._resource_manager.list_templates()
+    }
+
+
+def test_prompt_registered():
+    """MCP Trinity: the build prompt is registered."""
+    assert "build_pacs008_message" in _registered_prompt_names()
+
+
+def test_resources_registered():
+    """MCP Trinity: static resources plus the templated scheme resource."""
+    assert {"pacs008://message-types", "pacs008://schemes"} <= (
+        _registered_resource_uris()
+    )
+    assert "pacs008://scheme/{scheme_id}" in (_registered_resource_templates())
+
+
+def test_message_types_resource_matches_tool():
+    """The message-types resource serialises the list_message_types tool."""
+    payload = json.loads(server.message_types_resource())
+    assert payload == server.list_message_types()
+
+
+def test_schemes_resource_matches_tool():
+    """The schemes resource serialises the list_schemes tool."""
+    payload = json.loads(server.schemes_resource())
+    assert payload == server.list_schemes()
+
+
+def test_scheme_resource_matches_tool():
+    """The templated scheme resource matches the get_scheme tool output."""
+    payload = json.loads(server.scheme_resource("cbpr_plus"))
+    assert payload == server.get_scheme("cbpr_plus")
+    assert payload["name"] == "cbpr_plus"
+    assert payload["uetr_required"] is True
+
+
+def test_scheme_resource_unknown_returns_error():
+    """An unknown scheme_id yields a serialised error payload."""
+    payload = json.loads(server.scheme_resource("does-not-exist"))
+    assert "error" in payload
+
+
+def test_build_prompt_without_goal_omits_task_line():
+    """With no goal, the prompt omits the task line but keeps the tool order."""
+    out = server.build_pacs008_message()
+    assert "The task is" not in out
+    assert "list_message_types(" in out
+
+
+def test_build_prompt_whitespace_goal_omits_task_line():
+    """A whitespace-only goal is treated as no goal (strip branch)."""
+    out = server.build_pacs008_message("   ")
+    assert "The task is" not in out
+
+
+def test_build_prompt_includes_goal_and_tool_order():
+    """A goal is echoed and the full build-and-validate order is taught."""
+    out = server.build_pacs008_message("send a EUR credit transfer over CBPR+")
+    assert "send a EUR credit transfer over CBPR+" in out
+    for fragment in (
+        "list_message_types(",
+        "get_required_fields(",
+        "validate_records(",
+        "validate_scheme(",
+        "validate_addresses(",
+        "generate_message(",
+    ):
+        assert fragment in out
