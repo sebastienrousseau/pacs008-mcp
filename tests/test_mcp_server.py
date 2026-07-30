@@ -46,6 +46,7 @@ EXPECTED_TOOLS = {
     "validate_address",
     "repair_address",
     "validate_addresses",
+    "verify_bic_online",
 }
 
 
@@ -78,9 +79,9 @@ def test_server_and_main_are_well_formed():
 
 
 def test_all_tools_registered():
-    """All fifteen tools are registered on the server."""
+    """All sixteen tools are registered on the server."""
     assert _registered_tool_names() == EXPECTED_TOOLS
-    assert len(EXPECTED_TOOLS) == 15
+    assert len(EXPECTED_TOOLS) == 16
 
 
 def test_message_type_param_exposes_enum():
@@ -612,6 +613,177 @@ def test_validate_addresses_invalid_policy_returns_error():
     """An unknown policy returns an error dict, not an exception."""
     result = server.validate_addresses([{}], policy="nope")
     assert "error" in result
+
+
+# ---------------------------------------------------------------------------
+# verify_bic_online (structural check + optional directory lookup)
+# ---------------------------------------------------------------------------
+
+import httpx  # noqa: E402
+import respx  # noqa: E402
+
+_DIRECTORY_URL = "https://bic.example/lookup"
+# A CANNED test fixture, NOT a real directory response: the assertions below
+# check that the tool parses this shape, never that a real BIC maps to a real
+# institution.
+_CANNED_DIRECTORY_RESPONSE = {
+    "name": "Example Bank AG",
+    "city": "Frankfurt",
+    "country": "DE",
+    "status": "active",
+}
+
+
+def _annotations(name: str):
+    """Return the ToolAnnotations a client sees for the named tool."""
+    for tool in asyncio.run(server.server.list_tools()):
+        if tool.name == name:
+            return tool.annotations
+    raise AssertionError(f"tool not registered: {name}")
+
+
+def test_verify_bic_online_is_open_world():
+    """The lookup tool is annotated openWorldHint=True (reaches outside)."""
+    ann = _annotations("verify_bic_online")
+    assert ann is not None
+    assert ann.openWorldHint is True
+    assert ann.readOnlyHint is True
+
+
+def test_verify_bic_online_structural_only_no_fabrication(monkeypatch):
+    """With no endpoint configured it validates structure and invents nothing.
+
+    The KEY no-fabrication proof: a well-formed BIC's structure is confirmed
+    but the result carries NO bank name -- ``directory`` is ``null`` and there
+    is no top-level institution name anywhere in the payload.
+    """
+    monkeypatch.delenv(server._BIC_DIRECTORY_URL_ENV, raising=False)
+    result = server.verify_bic_online("DEUTDEFF")
+    assert result["is_structurally_valid"] is True
+    assert result["bic"] == "DEUTDEFF"
+    assert result["bank_code"] == "DEUT"
+    assert result["country_code"] == "DE"
+    assert result["location_code"] == "FF"
+    assert result["branch_code"] is None
+    assert result["length"] == 8
+    assert result["directory"] is None
+    assert "note" in result
+    # No fabricated institution details anywhere in the payload.
+    assert "name" not in result
+    assert "Example Bank" not in json.dumps(result)
+
+
+def test_verify_bic_online_normalizes_and_handles_11_char(monkeypatch):
+    """Spaces/hyphens are stripped and the 11-char branch code is exposed."""
+    monkeypatch.delenv(server._BIC_DIRECTORY_URL_ENV, raising=False)
+    result = server.verify_bic_online("deutde ff-500")
+    assert result["bic"] == "DEUTDEFF500"
+    assert result["branch_code"] == "500"
+    assert result["length"] == 11
+    assert result["is_structurally_valid"] is True
+
+
+def test_verify_bic_online_malformed_returns_structural_error(monkeypatch):
+    """A malformed BIC returns a structural error and never reaches the net."""
+    monkeypatch.setenv(server._BIC_DIRECTORY_URL_ENV, _DIRECTORY_URL)
+    result = server.verify_bic_online("DEUTDE")
+    assert result["is_structurally_valid"] is False
+    assert "error" in result
+    assert "directory" not in result
+
+
+@respx.mock
+def test_verify_bic_online_parses_directory_via_arg():
+    """A canned directory JSON object is parsed into the ``directory`` dict."""
+    route = respx.get(_DIRECTORY_URL).mock(
+        return_value=httpx.Response(200, json=_CANNED_DIRECTORY_RESPONSE)
+    )
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert route.called
+    assert result["is_structurally_valid"] is True
+    assert result["directory"] == {
+        "name": "Example Bank AG",
+        "city": "Frankfurt",
+        "country": "DE",
+        "status": "active",
+    }
+
+
+@respx.mock
+def test_verify_bic_online_uses_env_var(monkeypatch):
+    """The endpoint falls back to the configured environment variable."""
+    monkeypatch.setenv(server._BIC_DIRECTORY_URL_ENV, _DIRECTORY_URL)
+    respx.get(_DIRECTORY_URL).mock(
+        return_value=httpx.Response(200, json=_CANNED_DIRECTORY_RESPONSE)
+    )
+    result = server.verify_bic_online("DEUTDEFF")
+    assert result["directory"]["name"] == "Example Bank AG"
+
+
+@respx.mock
+def test_verify_bic_online_partial_directory_fields():
+    """Missing directory fields parse to ``None`` (no invention)."""
+    respx.get(_DIRECTORY_URL).mock(
+        return_value=httpx.Response(200, json={"name": "Partial Bank"})
+    )
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert result["directory"] == {
+        "name": "Partial Bank",
+        "city": None,
+        "country": None,
+        "status": None,
+    }
+
+
+@respx.mock
+def test_verify_bic_online_non_object_response():
+    """A non-object (JSON array) directory response is a graceful error."""
+    respx.get(_DIRECTORY_URL).mock(
+        return_value=httpx.Response(200, json=["unexpected"])
+    )
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert result["directory"] is None
+    assert "non-object" in result["error"]
+    assert result["is_structurally_valid"] is True
+
+
+@respx.mock
+def test_verify_bic_online_http_status_error():
+    """A 404/500 from the directory is reported as a graceful error."""
+    respx.get(_DIRECTORY_URL).mock(return_value=httpx.Response(404))
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert result["directory"] is None
+    assert "HTTP 404" in result["error"]
+    assert result["is_structurally_valid"] is True
+
+
+@respx.mock
+def test_verify_bic_online_transport_error():
+    """A transport failure is reported as a graceful error, not a raise."""
+    respx.get(_DIRECTORY_URL).mock(
+        side_effect=httpx.ConnectError("connection refused")
+    )
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert result["directory"] is None
+    assert "request failed" in result["error"]
+
+
+def test_verify_bic_online_missing_extra(monkeypatch):
+    """Without the ``online`` extra (no httpx) a graceful error is returned."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "httpx":
+            raise ImportError("No module named 'httpx'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
+    assert result["directory"] is None
+    assert "online" in result["error"]
+    assert result["is_structurally_valid"] is True
 
 
 # ---------------------------------------------------------------------------

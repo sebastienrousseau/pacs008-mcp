@@ -72,6 +72,7 @@ from pacs008.standards.address import (
 from pacs008.standards.address import (
     validate_addresses as _lib_validate_addresses,
 )
+from pacs008.validation.bic_validator import validate_bic_format
 from pacs008.validation.schema_validator import SchemaValidator
 from pacs008.xml.generate_xml import generate_xml_string
 from pacs008.xml.parser import parse
@@ -102,6 +103,25 @@ _PURE_READ = ToolAnnotations(
     idempotentHint=True,
     openWorldHint=False,
 )
+
+# ``verify_bic_online`` is the one tool that MAY reach outside this process: if
+# (and only if) a directory endpoint is configured it performs a read-only HTTP
+# GET against that caller-supplied external system. It never mutates anything,
+# so it stays ``readOnlyHint`` + ``idempotentHint``, but it is explicitly
+# ``openWorldHint=True`` so MCP clients know it can contact an external service.
+_ONLINE_READ = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
+
+# Environment variable that configures the BIC directory endpoint when no
+# ``directory_url`` argument is supplied. There is no free authoritative SWIFT
+# BIC directory API, so this server never ships or infers a BIC->institution
+# mapping: institution details come solely from a directory the operator points
+# it at (a commercial/central-bank/internal reference service).
+_BIC_DIRECTORY_URL_ENV = "PACS008_BIC_DIRECTORY_URL"
 
 # Human-readable names for each ISO 20022 message family, sourced verbatim from
 # the pacs008 library's own generator docstrings (pacs008.xml.generate_xml).
@@ -793,6 +813,156 @@ def validate_addresses(
             for err in errors
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# BIC directory lookup.
+#
+# The pacs008 library ships an OFFLINE ISO 9362 structural validator
+# (``validate_bic_format``): it checks the 8/11-char shape and that chars 5-6
+# are a known ISO 3166-1 alpha-2 country code, but it knows nothing about which
+# institution a BIC belongs to. There is no free authoritative SWIFT BIC
+# directory API, so this tool never fabricates an institution name: it always
+# does the offline structural check first, then -- only if the operator has
+# configured a directory endpoint -- enriches the result with whatever the
+# endpoint returns. With no endpoint configured it returns the structural
+# result and says so, inventing nothing.
+# ---------------------------------------------------------------------------
+
+
+@server.tool(
+    title="Verify a BIC (structural + optional directory lookup)",
+    annotations=_ONLINE_READ,
+)
+def verify_bic_online(
+    bic: Annotated[
+        str,
+        Field(
+            description=(
+                "A BIC / SWIFT code to verify (ISO 9362), 8 or 11 characters, "
+                "e.g. 'DEUTDEFF' or 'DEUTDEFF500'. Spaces and hyphens are "
+                "stripped and the value is upper-cased before checking."
+            )
+        ),
+    ],
+    directory_url: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Optional base URL of a BIC directory / reference-data endpoint "
+                "to enrich the result with institution details. The tool issues "
+                "a read-only HTTP GET with a '?bic=<BIC>' query parameter and "
+                "parses the JSON object it returns (name/city/country/status). "
+                "If omitted, the "
+                f"{_BIC_DIRECTORY_URL_ENV} environment variable is used; if "
+                "neither is set, only the offline structural result is returned "
+                "and NO institution name is inferred. No default/public "
+                "directory ships with this server."
+            )
+        ),
+    ] = None,
+) -> dict:
+    """Verify a BIC structurally, optionally enriched by a directory lookup.
+
+    Two-stage verification. First an OFFLINE ISO 9362 structural check (via the
+    pacs008 library): confirms the 8- or 11-character shape and that the
+    country code (chars 5-6) is a valid ISO 3166-1 alpha-2 code. A malformed
+    BIC returns ``{"bic": ..., "is_structurally_valid": False, "error": ...}``
+    and stops there.
+
+    Then, only if a directory endpoint is configured (the ``directory_url``
+    argument or the ``PACS008_BIC_DIRECTORY_URL`` environment variable), the
+    tool performs a read-only HTTP GET against that endpoint and folds whatever
+    institution ``name``/``city``/``country``/``status`` it returns into a
+    ``directory`` sub-dict. There is no free authoritative SWIFT BIC directory,
+    so with NO endpoint configured the tool returns the structural result plus
+    a ``note`` and ``directory: null`` -- it never fabricates a bank name.
+
+    Online lookups require the optional ``online`` extra (``pip install
+    'pacs008-mcp[online]'``, which pulls in ``httpx``); without it the tool
+    still returns the structural result plus an ``error`` explaining the
+    missing extra. Endpoint 4xx/5xx responses and transport failures are
+    likewise reported as a graceful ``error`` alongside the structural result.
+
+    Returns a dict with ``bic``, ``is_structurally_valid``, ``bank_code``,
+    ``country_code``, ``location_code``, ``branch_code``, ``length`` and either
+    ``directory`` (a dict of institution details, or ``null``) plus, when
+    applicable, ``note`` / ``error``.
+
+    Args:
+        bic: The BIC / SWIFT code to verify.
+        directory_url: Optional directory endpoint for online enrichment.
+    """
+    is_valid, error = validate_bic_format(bic)
+    if not is_valid:
+        return {
+            "bic": bic,
+            "is_structurally_valid": False,
+            "error": error,
+        }
+
+    bic_clean = bic.replace(" ", "").replace("-", "").upper()
+    result: dict[str, Any] = {
+        "bic": bic_clean,
+        "is_structurally_valid": True,
+        "bank_code": bic_clean[:4],
+        "country_code": bic_clean[4:6],
+        "location_code": bic_clean[6:8],
+        "branch_code": bic_clean[8:11] if len(bic_clean) == 11 else None,
+        "length": len(bic_clean),
+    }
+
+    endpoint = directory_url or os.environ.get(_BIC_DIRECTORY_URL_ENV)
+    if not endpoint:
+        result["directory"] = None
+        result["note"] = (
+            "No BIC directory endpoint configured; returning offline ISO 9362 "
+            "structural validation only. Pass a directory_url argument or set "
+            f"the {_BIC_DIRECTORY_URL_ENV} environment variable to enrich with "
+            "institution details. No institution name is inferred offline."
+        )
+        return result
+
+    try:
+        import httpx
+    except ImportError:
+        result["directory"] = None
+        result["error"] = (
+            "Online BIC lookup requires the optional 'online' extra. Install "
+            "it with: pip install 'pacs008-mcp[online]'."
+        )
+        return result
+
+    try:
+        response = httpx.get(endpoint, params={"bic": bic_clean}, timeout=10.0)
+        response.raise_for_status()
+        data = response.json()
+    except httpx.HTTPStatusError as exc:
+        result["directory"] = None
+        result["error"] = (
+            f"BIC directory returned HTTP {exc.response.status_code} for "
+            f"{bic_clean}."
+        )
+        return result
+    except httpx.HTTPError as exc:
+        result["directory"] = None
+        result["error"] = f"BIC directory request failed: {exc}"
+        return result
+
+    if not isinstance(data, dict):
+        result["directory"] = None
+        result["error"] = (
+            "BIC directory returned an unexpected (non-object) response."
+        )
+        return result
+
+    result["directory"] = {
+        "name": data.get("name"),
+        "city": data.get("city"),
+        "country": data.get("country"),
+        "status": data.get("status"),
+    }
+    return result
 
 
 def main() -> None:

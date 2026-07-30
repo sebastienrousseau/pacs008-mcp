@@ -22,6 +22,14 @@ python = ">=3.10,<4.0"
 pacs008 = ">=0.0.7"
 pacs008-loader-mt103 = ">=0.0.1"
 mcp = ">=1.2,<2"
+# Optional: only needed for the online BIC directory lookup in
+# ``verify_bic_online``. Installed via the ``online`` extra.
+httpx = { version = ">=0.24,<1", optional = true }
+
+[tool.poetry.extras]
+# `pip install 'pacs008-mcp[online]'` pulls in httpx so verify_bic_online can
+# reach a configured BIC directory endpoint. Core install stays HTTP-free.
+online = ["httpx"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.3,<10.0.0"
@@ -30,6 +38,10 @@ black = "^26.3.1"
 ruff = "^0.1.0"
 mypy = "^1.11.0"
 bandit = "^1.7.0"
+# Mocks the httpx transport boundary in the verify_bic_online online-path
+# tests (no real network I/O).
+respx = ">=0.21,<1"
+httpx = ">=0.24,<1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -115,6 +127,12 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "pacs008_loader_mt103.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# httpx is an optional (``online`` extra) lazy import inside verify_bic_online;
+# tolerate its absence so type-checking passes without the extra installed.
+module = "httpx.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
