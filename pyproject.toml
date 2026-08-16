@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pacs008-mcp"
-version = "0.0.7"
+version = "0.0.8"
 description = "Model Context Protocol (MCP) server exposing the pacs008 ISO 20022 FI-to-FI Customer Credit Transfer library as agent tools."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -19,19 +19,29 @@ pacs008-mcp = "pacs008_mcp.server:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-pacs008 = ">=0.0.7"
+pacs008 = ">=0.0.9"
 pacs008-loader-mt103 = ">=0.0.1"
 mcp = ">=1.2,<2"
 # Optional: only needed for the online BIC directory lookup in
 # ``verify_bic_online``. Installed via the ``online`` extra.
 httpx = { version = ">=0.24,<1", optional = true }
 
+# Transitive, via `mcp` -> `pyjwt[crypto]`. Nothing in this tree
+# constrains it, so a resolver is free to pick a version in the
+# >=44.0.0,<50.0.0 range that GHSA flags as high severity. Floored
+# here so the patched line is the only resolvable one; the pins in
+# requirements/ already sit at 50.0.0.
+cryptography = ">=50.0.0"
 [tool.poetry.extras]
 # `pip install 'pacs008-mcp[online]'` pulls in httpx so verify_bic_online can
 # reach a configured BIC directory endpoint. Core install stays HTTP-free.
 online = ["httpx"]
 
 [tool.poetry.group.dev.dependencies]
+packaging = ">=23.0"
+# `tomllib` is stdlib only from 3.11; the version guard test
+# needs a TOML reader on the 3.10 leg of the matrix.
+tomli = { version = ">=2.0", python = "<3.11" }
 pytest = ">=9.0.3,<10.0.0"
 pytest-cov = ">=6.0.0,<8.0.0"
 black = "^26.3.1"

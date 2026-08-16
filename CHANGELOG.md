@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2026-08-16
+
+Release the work that accumulated on `main` after `v0.0.7` was tagged,
+and take the `pacs008` release that makes the `cryptography` floor
+resolvable.
+
+### Fixed
+
+- `pacs008` is now `>=0.0.9`. Both `0.0.7` and `0.0.8` of `pacs008` cap
+  `cryptography<50.0.0`, so requiring the patched `cryptography 50.0.0`
+  against them is not merely unsatisfied — it is unresolvable:
+
+      ERROR: Cannot install cryptography>=50.0.0, pacs008==0.0.7 and
+      pacs008==0.0.8 because these package versions have conflicting
+      dependencies.
+
+- `cryptography` is floored at `>=50.0.0`. It arrives transitively via
+  `mcp` -> `pyjwt[crypto]` and nothing constrained it, so a resolver
+  could pick a version in the range GHSA flags as high severity.
+
+### Added
+
+- Online BIC directory verification tool (#10).
+- MCP prompts and resources for Trinity parity (#9).
+- `tests/test_package_version.py`, tying `__version__` to
+  `pyproject.toml` and the newest `CHANGELOG.md` heading. Its absence is
+  why `0.0.7` shipped without a changelog entry and why the
+  `cryptography` bump in #12 — whose commit message says `(v0.0.7)` —
+  landed *after* the `v0.0.7` tag and was never published.
+
+## [0.0.7] - 2026-07-30
+
+Backfilled: this version was released and tagged, but no changelog
+entry was written at the time.
+
+### Changed
+
+- Required `pacs008>=0.0.7` (was `>=0.0.5`) for the 0.0.7 validation
+  bug fix.
+
 ## [0.0.6] - 2026-07-26
 
 ### Added
