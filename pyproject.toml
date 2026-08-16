@@ -26,6 +26,12 @@ mcp = ">=1.2,<2"
 # ``verify_bic_online``. Installed via the ``online`` extra.
 httpx = { version = ">=0.24,<1", optional = true }
 
+# Transitive, via `mcp` -> `pyjwt[crypto]`. Nothing in this tree
+# constrains it, so a resolver is free to pick a version in the
+# >=44.0.0,<50.0.0 range that GHSA flags as high severity. Floored
+# here so the patched line is the only resolvable one; the pins in
+# requirements/ already sit at 50.0.0.
+cryptography = ">=50.0.0"
 [tool.poetry.extras]
 # `pip install 'pacs008-mcp[online]'` pulls in httpx so verify_bic_online can
 # reach a configured BIC directory endpoint. Core install stays HTTP-free.
