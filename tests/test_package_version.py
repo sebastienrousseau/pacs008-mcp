@@ -134,7 +134,19 @@ def test_pacs008_floor_admits_the_patched_cryptography() -> None:
             f"cryptography<50.0.0 and makes this package uninstallable "
             f"alongside its own cryptography floor"
         )
-    assert requirement.specifier.contains(Version("0.0.9"))
+    # The floor must be at least 0.0.9, not exactly it. Pinning the equality
+    # made every later bump fail this test for raising the floor, which is the
+    # opposite of what it is guarding: 0.0.10 excludes the capped releases just
+    # as 0.0.9 does.
+    floor = min(
+        Version(clause.version)
+        for clause in requirement.specifier
+        if clause.operator in (">=", "==", "~=")
+    )
+    assert floor >= Version("0.0.9"), (
+        f"pacs008{spec} has a floor below 0.0.9, which admits a release "
+        f"capping cryptography<50.0.0"
+    )
 
 
 def test_cryptography_floor_is_the_patched_release() -> None:
