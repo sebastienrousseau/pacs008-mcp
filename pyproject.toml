@@ -19,7 +19,7 @@ pacs008-mcp = "pacs008_mcp.server:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-pacs008 = ">=0.0.9"
+pacs008 = ">=0.0.10"
 pacs008-loader-mt103 = ">=0.0.1"
 mcp = ">=1.2,<2"
 # Optional: only needed for the online BIC directory lookup in
