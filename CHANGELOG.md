@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.9] - 2026-08-28
+
+Swift deferred the CBPR+ structured-address start date; the descriptions a
+model reads still named it as in force.
+
+### Fixed
+
+- The `address_policy` parameter description, the `classify_address`
+  docstring and the workflow guidance all said the CBPR+ structured-address
+  rule takes force on 14 November 2026. Swift deferred that on 27 August 2026
+  and confirms replacement timing by December at the latest. These strings
+  are what an assistant reads to decide what to tell a user, so a stale date
+  here is repeated to whoever asked as though it were authoritative.
+- The descriptions now say the deferral is Swift's and covers CBPR+; HVPS+,
+  T2 RTGS, CHAPS, Lynx and Fedwire set their own timing and are unaffected.
+
+### Unchanged
+
+- No tool behaviour changes. Descriptions only.
+
 ## [0.0.8] - 2026-08-16
 
 Release the work that accumulated on `main` after `v0.0.7` was tagged,
