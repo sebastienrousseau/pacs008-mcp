@@ -231,9 +231,10 @@ _AddressPolicy = Annotated[
     Field(
         description=(
             "Postal-address validation policy. 'unstructured_ok' permits any "
-            "form (pre-cliff / generic); 'hybrid_or_structured' rejects fully "
-            "unstructured addresses (the SWIFT CBPR+ UG2026 default in force "
-            "from 14 November 2026); 'structured_only' requires full "
+            "form (pre-cutover / generic); 'hybrid_or_structured' rejects fully "
+            "unstructured addresses (the SWIFT CBPR+ UG2026 default; its "
+            "14 November 2026 start was deferred on 27 August 2026 and Swift "
+            "confirms new timing by December); 'structured_only' requires full "
             f"structured form. Must be one of: {_ADDRESS_POLICY_LIST}."
         ),
         json_schema_extra={"enum": _ADDRESS_POLICY_VALUES},
@@ -614,10 +615,12 @@ def convert_mt103(
 # ---------------------------------------------------------------------------
 # November 2026 structured-address cliff tools.
 #
-# On 14 November 2026, fully unstructured postal addresses are decommissioned
-# across SWIFT CBPR+, HVPS+, T2 RTGS, CHAPS, Fedwire and Lynx: any high-value
-# or cross-border payment carrying an unstructured-only address is rejected at
-# the rail. These tools wrap the pacs008 library's ``standards.address`` module
+# Fully unstructured postal addresses are decommissioned across SWIFT CBPR+,
+# HVPS+, T2 RTGS, CHAPS, Fedwire and Lynx: any high-value or cross-border
+# payment carrying an unstructured-only address is rejected at the rail. Swift
+# deferred the CBPR+ start date on 27 August 2026 and confirms replacement
+# timing by December; the other operators set their own and are unaffected.
+# These tools wrap the pacs008 library's ``standards.address`` module
 # so agents can classify, validate and repair addresses ahead of the cliff.
 # ---------------------------------------------------------------------------
 
@@ -638,8 +641,8 @@ _ADDRESS_DICT_FIELD = Annotated[
 def classify_address(address: _ADDRESS_DICT_FIELD) -> dict:
     """Classify a postal address as structured, hybrid, or unstructured.
 
-    Use this to see where an address stands against the 14 November 2026 SWIFT
-    cliff: ``structured`` (town + country + structured detail, no free-form
+    Use this to see where an address stands against the SWIFT structured-address
+    rule: ``structured`` (town + country + structured detail, no free-form
     lines), ``hybrid`` (town + country + 1-2 free-form ``adr_line`` lines, the
     minimum CBPR+ UG2026 bar), or ``unstructured`` (free-form only — rejected
     from the cliff date). To check acceptability under a policy use
@@ -1072,7 +1075,7 @@ def build_pacs008_message(
         "validate_records(message_type, records); check the rail's rulebook "
         "with validate_scheme(scheme, records) after inspecting get_scheme("
         "scheme) (or the pacs008://scheme/{scheme_id} resource); and check "
-        "party addresses against the 14 November 2026 structured-address cliff "
+        "party addresses against the CBPR+ structured-address rule "
         "with validate_addresses(addresses). Only once all checks pass, call "
         "generate_message(message_type, records) for the XSD-validated XML. To "
         "verify an externally produced document use validate_xml(message_type, "
