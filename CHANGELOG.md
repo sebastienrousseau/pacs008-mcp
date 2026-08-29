@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.12] - 2026-08-29
+
+Aligns the `pacs008` suite on one version number, and adds the gates this
+repository was missing.
+
+### Added
+
+- `benches/bench_tool_dispatch.py` measures what an agent waits for: the
+  dispatch floor, the payment pipeline across batch sizes, and the
+  address tools. Two results are worth having on the record — validation
+  costs about seven times what generation does, and address screening is
+  roughly 155× cheaper per item than record validation, which is what
+  makes a million-address cutover check a twelve-second job rather than
+  a scheduled one.
+- `docs/benchmarks.md` with the measured tables.
+- `scripts/check_suite_consistency.py` and a scheduled `Suite
+  Consistency` workflow comparing this tree, and every published member,
+  against PyPI.
+- `tests/test_suite_conformance.py`, the shared suite conformance gate.
+- `SECURITY.md`, written for an MCP server: stdio has no authentication
+  of its own, tool inputs arrive from a model rather than someone who
+  read the docs, and `verify_bic_online` is the one tool that egresses.
+
+### Changed
+
+- Version aligned to `0.0.12` across `pacs008`, `pacs008-mcp` and
+  `pacs008-loader-mt103`, which had drifted to `0.0.11`, `0.0.9` and
+  `0.0.3`.
+
 ## [0.0.9] - 2026-08-28
 
 Swift deferred the CBPR+ structured-address start date; the descriptions a
