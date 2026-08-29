@@ -15,4 +15,4 @@
 
 """pacs008-mcp: a Model Context Protocol server for the pacs008 library."""
 
-__version__ = "0.0.9"
+__version__ = "0.0.12"

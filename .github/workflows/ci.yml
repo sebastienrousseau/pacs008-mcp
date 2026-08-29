@@ -37,6 +37,13 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --tb=short
 
+      # Not a timing gate -- wall-clock is not comparable between
+      # runners. This proves the benchmark still runs against the
+      # current API rather than rotting into a file that reads as
+      # verified and is not.
+      - name: Run the benchmark
+        run: python benches/bench_tool_dispatch.py --quick
+
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
@@ -58,10 +65,10 @@ jobs:
           pip install ruff black mypy
 
       - name: Ruff check
-        run: ruff check pacs008_mcp/
+        run: ruff check pacs008_mcp/ benches/ scripts/
 
       - name: Black check
-        run: black --check pacs008_mcp/ tests/
+        run: black --check pacs008_mcp/ tests/ benches/ scripts/
 
       - name: Mypy
         run: mypy pacs008_mcp/
