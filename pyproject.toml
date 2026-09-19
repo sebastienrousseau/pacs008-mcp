@@ -21,7 +21,7 @@ pacs008-mcp = "pacs008_mcp.server:main"
 python = ">=3.10,<4.0"
 pacs008 = ">=0.0.10"
 pacs008-loader-mt103 = ">=0.0.1"
-mcp = ">=1.2,<2"
+mcp = ">=1.2,<3"
 # Optional: only needed for the online BIC directory lookup in
 # ``verify_bic_online``. Installed via the ``online`` extra.
 httpx = { version = ">=0.24,<1", optional = true }
@@ -133,6 +133,12 @@ exclude = [
     ".venv/",
     ".eggs/",
 ]
+
+# The server object comes from the SDK-compat shim, so its decorators
+# are untyped from mypy's point of view on either major.
+[[tool.mypy.overrides]]
+module = "pacs008_mcp.server"
+disallow_untyped_decorators = false
 
 [[tool.mypy.overrides]]
 module = "mcp.*"

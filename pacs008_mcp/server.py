@@ -48,7 +48,7 @@ Launching the server:
           }
         }
 
-The server communicates over stdio (FastMCP's default transport).
+The server communicates over stdio (the SDK's default transport).
 """
 
 import dataclasses
@@ -59,7 +59,6 @@ import tempfile
 from importlib.resources import files
 from typing import Annotated, Any
 
-from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from pacs008.constants import valid_xml_types
 from pacs008.profiles import get_profile, list_profiles
@@ -81,12 +80,11 @@ from pacs008_loader_mt103.loader import parse_mt103
 from pydantic import Field
 
 from pacs008_mcp import __version__
+from pacs008_mcp._mcp_compat import build_server
 
-server = FastMCP("pacs008")
-# FastMCP does not expose a version kwarg; without this override the
-# MCP SDK's own version leaks into serverInfo.version, breaking
-# manifest/runtime coherence checks (e.g. Glama scoring).
-server._mcp_server.version = __version__
+# The shim picks FastMCP (mcp 1.x) or MCPServer (mcp 2.x) and reports
+# the package version in serverInfo either way.
+server = build_server("pacs008", __version__)
 
 # Shared MCP tool annotations. Every tool in this server is a pure,
 # side-effect-free reader over the pacs008 library: each tool computes solely
@@ -97,7 +95,7 @@ server._mcp_server.version = __version__
 #
 # These hints let MCP clients (and the Glama quality grader) reason about
 # safety, caching, and auto-approval without executing the tool.
-_PURE_READ = ToolAnnotations(
+_PURE_READ = ToolAnnotations(  # type: ignore[call-arg]
     readOnlyHint=True,
     destructiveHint=False,
     idempotentHint=True,
@@ -109,7 +107,7 @@ _PURE_READ = ToolAnnotations(
 # GET against that caller-supplied external system. It never mutates anything,
 # so it stays ``readOnlyHint`` + ``idempotentHint``, but it is explicitly
 # ``openWorldHint=True`` so MCP clients know it can contact an external service.
-_ONLINE_READ = ToolAnnotations(
+_ONLINE_READ = ToolAnnotations(  # type: ignore[call-arg]
     readOnlyHint=True,
     destructiveHint=False,
     idempotentHint=True,

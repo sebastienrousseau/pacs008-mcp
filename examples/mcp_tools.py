@@ -13,6 +13,7 @@ receive.
 
 import asyncio
 
+import pacs008_mcp._mcp_compat as compat
 from pacs008_mcp.server import server
 
 # A single flat pacs.008 FI-to-FI Customer Credit Transfer record.
@@ -41,9 +42,9 @@ async def main() -> None:
 
     async def call(name, args):
         result = await server.call_tool(name, args)
-        # FastMCP returns a (content, structured) tuple or content blocks;
-        # pull the first text payload for display.
-        content = result[0] if isinstance(result, tuple) else result
+        # The SDK majors shape the result differently; the shim reads the
+        # content blocks from either.
+        content = compat.result_content(result)
         text = content[0].text if content else ""
         return text
 
