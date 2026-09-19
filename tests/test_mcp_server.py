@@ -17,6 +17,7 @@
 
 import asyncio
 import json
+import pathlib
 
 import pytest
 
@@ -145,24 +146,29 @@ def test_list_schemes_dedupes_to_canonical():
 
 def test_get_scheme_returns_rules():
     """A known scheme returns its rule attributes."""
+    from pacs008.profiles import get_profile
+
     rules = server.get_scheme("cbpr_plus")
-    assert rules["name"] == "cbpr_plus"
-    assert rules["uetr_required"] is True
-    assert rules["max_remit_info_len"] == 140
-    assert sorted(rules["allowed_charge_bearers"]) == [
-        "CRED",
-        "DEBT",
-        "SHAR",
-        "SLEV",
-    ]
-    assert isinstance(rules["pinned_versions"], dict)
-    assert isinstance(rules["lei_required_for"], list)
+    profile = get_profile("cbpr_plus")
+    assert rules == {
+        "scheme": "cbpr_plus",
+        "name": "cbpr_plus",
+        "mr_version": profile.mr_version,
+        "uetr_required": True,
+        "max_remit_info_len": 140,
+        "allowed_charge_bearers": ["CRED", "DEBT", "SHAR", "SLEV"],
+        "max_transactions_per_msg": profile.max_transactions_per_msg,
+        "lei_required_for": list(profile.lei_required_for()),
+        "pinned_versions": profile.pinned_versions(),
+    }
+    assert rules["pinned_versions"]["pacs.008"] == "001.08"
 
 
 def test_get_scheme_unknown_returns_error():
     """An unknown scheme returns an error dict, not an exception."""
     result = server.get_scheme("does-not-exist")
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert "Unknown scheme profile 'does-not-exist'" in result["error"]
 
 
 # ---------------------------------------------------------------------------
@@ -194,8 +200,7 @@ def test_get_input_schema_returns_schema():
 def test_get_input_schema_invalid_type_returns_error_dict():
     """An unsupported message type returns an ``{"error": ...}`` dict."""
     result = server.get_input_schema("pacs.999.999.99")
-    assert isinstance(result, dict)
-    assert "error" in result
+    assert result == {"error": "Invalid message type: pacs.999.999.99"}
 
 
 # ---------------------------------------------------------------------------
@@ -227,8 +232,7 @@ def test_validate_records_reports_errors(sample_record):
 def test_validate_records_invalid_type_returns_error_dict():
     """An unsupported message type returns an ``{"error": ...}`` dict."""
     result = server.validate_records("pacs.999.999.99", [{}])
-    assert isinstance(result, dict)
-    assert "error" in result
+    assert result == {"error": "Invalid message type: pacs.999.999.99"}
 
 
 # ---------------------------------------------------------------------------
@@ -258,7 +262,8 @@ def test_validate_scheme_reports_violations():
 def test_validate_scheme_unknown_returns_error():
     """An unknown scheme returns an error dict, not an exception."""
     result = server.validate_scheme("nope", [{}])
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert "Unknown scheme profile 'nope'" in result["error"]
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +286,48 @@ def test_generate_message_caches_staged_template(sample_record):
     assert first == second
 
 
+def test_template_staging_copies_the_bundled_files_once(
+    tmp_path, monkeypatch, sample_record
+):
+    """From a cold cache the bundled template and XSD are staged verbatim.
+
+    The stage is per process and warm after the first generation, so this
+    test empties it and points it at a fresh directory: the copies must be
+    byte-identical to the files inside the installed ``pacs008`` package,
+    live under ``<stage>/<message_type>/``, be cached as the same tuple on
+    the second call, and drive a generation.
+    """
+    from importlib.resources import files
+
+    monkeypatch.setattr(server, "_STAGE_DIR", str(tmp_path))
+    monkeypatch.setattr(server, "_STAGED", {})
+
+    template, xsd = server._resolve_template_paths(MSG_TYPE)
+
+    bundled = files("pacs008") / "templates" / MSG_TYPE
+    assert template == str(tmp_path / MSG_TYPE / "template.xml")
+    assert xsd == str(tmp_path / MSG_TYPE / f"{MSG_TYPE}.xsd")
+    assert (
+        pathlib.Path(template).read_bytes()
+        == (bundled / "template.xml").read_bytes()
+    )
+    assert (
+        pathlib.Path(xsd).read_bytes()
+        == (bundled / f"{MSG_TYPE}.xsd").read_bytes()
+    )
+    assert server._STAGED == {MSG_TYPE: (template, xsd)}
+    assert server._resolve_template_paths(MSG_TYPE) is server._STAGED[MSG_TYPE]
+    assert server._STAGED == {MSG_TYPE: (template, xsd)}
+
+    # A second process-cold staging into a directory that already exists
+    # (a restarted server reusing its temp dir) must not fail.
+    server._STAGED.clear()
+    assert server._resolve_template_paths(MSG_TYPE) == (template, xsd)
+
+    xml = server.generate_message(MSG_TYPE, [sample_record])
+    assert xml.lstrip().startswith("<?xml")
+
+
 def test_generate_message_invalid_type_returns_error(sample_record):
     """An unsupported message type returns a serialized error payload."""
     out = server.generate_message("pacs.999.999.99", [sample_record])
@@ -292,7 +339,8 @@ def test_generate_message_missing_fields_returns_error():
     """A record missing required fields yields a serialized error, not a raise."""
     out = server.generate_message(MSG_TYPE, [{}])
     payload = json.loads(out)
-    assert "error" in payload
+    # The library names the first missing column.
+    assert payload == {"error": "'msg_id'"}
 
 
 # ---------------------------------------------------------------------------
@@ -328,16 +376,22 @@ def test_parse_message_classifies_generated_document(sample_record):
     """A generated pacs.008 document is parsed and classified (no BAH)."""
     xml = server.generate_message(MSG_TYPE, [sample_record])
     result = server.parse_message(xml)
-    assert result["msg_family"] == "pacs.008"
-    assert result["msg_def_idr"] == MSG_TYPE
-    assert result["envelope_wrapped"] is False
-    assert result["bah"] is None
+    assert result == {
+        "msg_def_idr": MSG_TYPE,
+        "msg_family": "pacs.008",
+        "version": "001.08",
+        "root_local_name": "Document",
+        "namespace_uri": "urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08",
+        "envelope_wrapped": False,
+        "bah": None,
+    }
 
 
 def test_parse_message_malformed_returns_error():
     """Malformed XML returns an error dict rather than raising."""
     result = server.parse_message("<not-xml")
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert result["error"].startswith("malformed XML")
 
 
 def test_parse_message_serializes_bah(monkeypatch):
@@ -362,9 +416,23 @@ def test_parse_message_serializes_bah(monkeypatch):
     )
     monkeypatch.setattr(server, "parse", lambda xml: parsed)
     result = server.parse_message("<ignored/>")
-    assert result["envelope_wrapped"] is True
-    assert result["bah"]["sender_bic"] == "DEUTDEFF"
-    assert result["bah"]["msg_def_idr"] == "pacs.008.001.08"
+    assert result == {
+        "msg_def_idr": "pacs.008.001.08",
+        "msg_family": "pacs.008",
+        "version": "001.08",
+        "root_local_name": "Document",
+        "namespace_uri": "urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08",
+        "envelope_wrapped": True,
+        "bah": {
+            "sender_bic": "DEUTDEFF",
+            "receiver_bic": "COBADEFF",
+            "biz_msg_idr": "BIZ-001",
+            "msg_def_idr": "pacs.008.001.08",
+            "creation_dt": "2026-01-15T10:30:00",
+            "priority": "NORM",
+            "signature": None,
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -440,9 +508,8 @@ def test_convert_mt103_output_generates_xml():
 def test_convert_mt103_malformed_returns_error():
     """An MT103 missing a mandatory field returns an ``{"error": ...}`` dict."""
     result = server.convert_mt103(":23B:CRED\n")
-    assert isinstance(result, dict)
-    assert "error" in result
-    assert "records" not in result
+    assert set(result) == {"error"}
+    assert ":20:" in result["error"]
 
 
 # ---------------------------------------------------------------------------
@@ -510,7 +577,8 @@ def test_classify_address_bad_country_returns_error():
 def test_classify_address_unknown_field_returns_error():
     """An unknown field returns an error dict (TypeError path)."""
     result = server.classify_address({"not_a_field": "x"})
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert "not_a_field" in result["error"]
 
 
 def test_validate_address_rejects_unstructured_under_cliff():
@@ -550,7 +618,8 @@ def test_validate_address_invalid_policy_returns_error():
 def test_validate_address_bad_address_returns_error():
     """A malformed address returns an error dict (build failure path)."""
     result = server.validate_address({"ctry": "ZZ"})
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert "'ZZ'" in result["error"]
 
 
 def test_repair_address_upgrades_unstructured_to_hybrid():
@@ -572,7 +641,8 @@ def test_repair_address_upgrades_unstructured_to_hybrid():
 def test_repair_address_bad_country_returns_error():
     """An invalid country hint returns an error dict."""
     result = server.repair_address(["1 High Street"], "ZZ")
-    assert "error" in result
+    assert set(result) == {"error"}
+    assert "'ZZ'" in result["error"]
 
 
 def test_validate_addresses_flags_unstructured_row():
@@ -682,7 +752,12 @@ def test_verify_bic_online_structural_only_no_fabrication(monkeypatch):
     assert result["branch_code"] is None
     assert result["length"] == 8
     assert result["directory"] is None
-    assert "note" in result
+    assert result["note"] == (
+        "No BIC directory endpoint configured; returning offline ISO 9362 "
+        "structural validation only. Pass a directory_url argument or set "
+        "the PACS008_BIC_DIRECTORY_URL environment variable to enrich with "
+        "institution details. No institution name is inferred offline."
+    )
     # No fabricated institution details anywhere in the payload.
     assert "name" not in result
     assert "Example Bank" not in json.dumps(result)
@@ -702,9 +777,10 @@ def test_verify_bic_online_malformed_returns_structural_error(monkeypatch):
     """A malformed BIC returns a structural error and never reaches the net."""
     monkeypatch.setenv(server._BIC_DIRECTORY_URL_ENV, _DIRECTORY_URL)
     result = server.verify_bic_online("DEUTDE")
+    assert set(result) == {"bic", "is_structurally_valid", "error"}
+    assert result["bic"] == "DEUTDE"
     assert result["is_structurally_valid"] is False
-    assert "error" in result
-    assert "directory" not in result
+    assert result["error"]
 
 
 @respx.mock
@@ -758,7 +834,9 @@ def test_verify_bic_online_non_object_response():
     )
     result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
     assert result["directory"] is None
-    assert "non-object" in result["error"]
+    assert result["error"] == (
+        "BIC directory returned an unexpected (non-object) response."
+    )
     assert result["is_structurally_valid"] is True
 
 
@@ -768,7 +846,7 @@ def test_verify_bic_online_http_status_error():
     respx.get(_DIRECTORY_URL).mock(return_value=httpx.Response(404))
     result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
     assert result["directory"] is None
-    assert "HTTP 404" in result["error"]
+    assert result["error"] == "BIC directory returned HTTP 404 for DEUTDEFF."
     assert result["is_structurally_valid"] is True
 
 
@@ -780,7 +858,9 @@ def test_verify_bic_online_transport_error():
     )
     result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
     assert result["directory"] is None
-    assert "request failed" in result["error"]
+    assert result["error"] == (
+        "BIC directory request failed: connection refused"
+    )
 
 
 def test_verify_bic_online_missing_extra(monkeypatch):
@@ -797,7 +877,10 @@ def test_verify_bic_online_missing_extra(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     result = server.verify_bic_online("DEUTDEFF", directory_url=_DIRECTORY_URL)
     assert result["directory"] is None
-    assert "online" in result["error"]
+    assert result["error"] == (
+        "Online BIC lookup requires the optional 'online' extra. Install "
+        "it with: pip install 'pacs008-mcp[online]'."
+    )
     assert result["is_structurally_valid"] is True
 
 
@@ -812,6 +895,21 @@ def test_main_runs_the_server(monkeypatch):
     monkeypatch.setattr(server.server, "run", lambda: calls.append(True))
     server.main([])
     assert calls == [True]
+
+
+def test_main_hands_the_server_and_flags_to_the_shared_cli(monkeypatch):
+    """``main`` passes the server, argv, its name and version to ``serve``."""
+    seen = []
+    monkeypatch.setattr(server._cli, "serve", lambda *args: seen.append(args))
+    server.main(["--transport", "sse"])
+    assert seen == [
+        (
+            server.server,
+            ["--transport", "sse"],
+            "pacs008-mcp",
+            server.__version__,
+        )
+    ]
 
 
 def test_call_tool_through_fastmcp():
@@ -894,29 +992,44 @@ def test_scheme_resource_unknown_returns_error():
     assert "error" in payload
 
 
+# The prompt is the one piece of text an agent follows, so it is pinned
+# verbatim: a wording slip that drops a step or a tool name is a red test.
+_PROMPT_STEPS = (
+    "Work in this order: call list_message_types() to confirm the exact "
+    "message_type (or read the pacs008://message-types resource). If you "
+    "are starting from a legacy SWIFT MT103, call convert_mt103(mt103_text) "
+    "to get the flat pacs.008 record(s). Call get_required_fields("
+    "message_type) and get_input_schema(message_type) to learn the fields, "
+    "then assemble one flat record per instruction. Check structural shape "
+    "with validate_records(message_type, records); check the rail's "
+    "rulebook with validate_scheme(scheme, records) after inspecting "
+    "get_scheme(scheme) (or the pacs008://scheme/{scheme_id} resource); and "
+    "check party addresses against the CBPR+ structured-address rule with "
+    "validate_addresses(addresses). Only once all checks pass, call "
+    "generate_message(message_type, records) for the XSD-validated XML. To "
+    "verify an externally produced document use validate_xml(message_type, "
+    "xml); to classify an inbound message use parse_message(xml)."
+)
+
+
 def test_build_prompt_without_goal_omits_task_line():
     """With no goal, the prompt omits the task line but keeps the tool order."""
     out = server.build_pacs008_message()
-    assert "The task is" not in out
-    assert "list_message_types(" in out
+    assert out == f"You have the pacs008 ISO 20022 server. {_PROMPT_STEPS}"
 
 
 def test_build_prompt_whitespace_goal_omits_task_line():
     """A whitespace-only goal is treated as no goal (strip branch)."""
     out = server.build_pacs008_message("   ")
-    assert "The task is" not in out
+    assert out == server.build_pacs008_message()
 
 
 def test_build_prompt_includes_goal_and_tool_order():
     """A goal is echoed and the full build-and-validate order is taught."""
-    out = server.build_pacs008_message("send a EUR credit transfer over CBPR+")
-    assert "send a EUR credit transfer over CBPR+" in out
-    for fragment in (
-        "list_message_types(",
-        "get_required_fields(",
-        "validate_records(",
-        "validate_scheme(",
-        "validate_addresses(",
-        "generate_message(",
-    ):
-        assert fragment in out
+    out = server.build_pacs008_message(
+        " send a EUR credit transfer over CBPR+ "
+    )
+    assert out == (
+        "You have the pacs008 ISO 20022 server. The task is: "
+        f'"send a EUR credit transfer over CBPR+". {_PROMPT_STEPS}'
+    )

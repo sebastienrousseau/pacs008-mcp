@@ -27,6 +27,11 @@ calendar.
   command line (ADR 0001).
 - Runs on both supported majors of the `mcp` SDK through a
   compatibility shim; a fresh install gets 2.x.
+- Engineering-quality parity with `pain001-mcp`: tools registered
+  explicitly so mutation testing reaches them (ADR 0002), a gated
+  mutation score over the handlers, Hypothesis property tests, a 100%
+  docstring gate, a test that runs the example, and a rendered Sphinx
+  site deployed to GitHub Pages.
 
 ## Beyond
 
