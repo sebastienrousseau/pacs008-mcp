@@ -782,7 +782,13 @@ def validate_addresses(
     except ValueError:
         return {"error": f"Invalid policy: {policy!r}"}
 
-    errors = _lib_validate_addresses(addresses, resolved)
+    try:
+        errors = _lib_validate_addresses(addresses, resolved)
+    except (ValueError, TypeError) as exc:
+        # A row whose address column breaks a PostalAddress rule (an
+        # over-length field, a bad country) fails at construction inside
+        # the library; report it like every other bad input.
+        return {"error": str(exc)}
     return {
         "policy": resolved.value,
         "is_valid": not errors,

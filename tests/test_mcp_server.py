@@ -616,6 +616,19 @@ def test_validate_addresses_invalid_policy_returns_error():
     assert "error" in result
 
 
+def test_validate_addresses_malformed_row_returns_error():
+    """A row whose address breaks a field rule returns an error dict.
+
+    Found by the property test: the library raises ``ValueError`` when a
+    column exceeds its ISO 20022 length, and the handler used to let it
+    escape instead of returning the envelope its docstring promises.
+    """
+    rows = [{"debtor_address_bldg_nb": "0" * 17}]
+    result = server.validate_addresses(rows)
+    assert set(result) == {"error"}
+    assert "bldg_nb" in result["error"]
+
+
 # ---------------------------------------------------------------------------
 # verify_bic_online (structural check + optional directory lookup)
 # ---------------------------------------------------------------------------
