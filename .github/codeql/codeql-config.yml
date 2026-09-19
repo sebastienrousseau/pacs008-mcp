@@ -1,0 +1,17 @@
+name: "pacs008-mcp CodeQL config"
+
+# The example and the tests deliberately drive the MCP tools with sample
+# payment data (BICs, debtor and creditor names, postal addresses).
+# CodeQL's ``py/clear-text-logging-sensitive-data`` heuristic flags
+# ``print(...)`` of any expression downstream of those fields even when
+# the values are obviously fake fixtures. Excluding them keeps the scan
+# focused on the code that ships in ``pacs008_mcp/``.
+paths-ignore:
+  - examples
+  - tests
+  - benches
+
+# Use the default + security-extended query suite so we get the same
+# coverage GitHub's default setup would have offered.
+queries:
+  - uses: security-and-quality

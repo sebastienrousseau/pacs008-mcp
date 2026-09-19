@@ -48,7 +48,8 @@ Launching the server:
           }
         }
 
-The server communicates over stdio (the SDK's default transport).
+stdio by default; ``--transport streamable-http`` or ``--transport sse``
+listens on ``--host``/``--port`` instead. See :mod:`pacs008_mcp._cli`.
 """
 
 import dataclasses
@@ -79,7 +80,7 @@ from pacs008.xml.validate_via_xsd import validate_xml_string_via_xsd
 from pacs008_loader_mt103.loader import parse_mt103
 from pydantic import Field
 
-from pacs008_mcp import __version__
+from pacs008_mcp import __version__, _cli
 from pacs008_mcp._mcp_compat import build_server
 
 # The shim picks FastMCP (mcp 1.x) or MCPServer (mcp 2.x) and reports
@@ -1081,9 +1082,16 @@ def build_pacs008_message(
     )
 
 
-def main() -> None:
-    """Run the Pacs008 MCP server over stdio (the ``pacs008-mcp`` entry point)."""
-    server.run()
+def main(argv: list[str] | None = None) -> None:
+    """Run the pacs008 MCP server (the ``pacs008-mcp`` entry point).
+
+    stdio by default; ``--transport streamable-http`` or ``--transport sse``
+    listens on ``--host``/``--port`` instead. See :mod:`pacs008_mcp._cli`.
+
+    Args:
+        argv: Command-line arguments; ``None`` reads ``sys.argv[1:]``.
+    """
+    _cli.serve(server, argv, "pacs008-mcp", __version__)
 
 
 if __name__ == "__main__":

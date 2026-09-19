@@ -794,10 +794,10 @@ def test_verify_bic_online_missing_extra(monkeypatch):
 
 
 def test_main_runs_the_server(monkeypatch):
-    """``main`` delegates to the FastMCP server's ``run`` over stdio."""
+    """``main([])`` delegates to the server's ``run`` over stdio."""
     calls = []
     monkeypatch.setattr(server.server, "run", lambda: calls.append(True))
-    server.main()
+    server.main([])
     assert calls == [True]
 
 
