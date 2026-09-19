@@ -32,7 +32,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[online]"
-          pip install pytest pytest-cov respx
+          pip install pytest pytest-cov respx hypothesis
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
@@ -62,7 +62,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ".[online]"
-          pip install ruff black mypy
+          pip install ruff black mypy interrogate
 
       - name: Ruff check
         run: ruff check pacs008_mcp/ benches/ scripts/
@@ -72,3 +72,6 @@ jobs:
 
       - name: Mypy
         run: mypy pacs008_mcp/
+
+      - name: Enforce 100% docstring coverage
+        run: interrogate -c pyproject.toml pacs008_mcp

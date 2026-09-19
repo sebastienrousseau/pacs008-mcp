@@ -32,6 +32,7 @@ messages, all from your favourite MCP client.
 - [November 2026 structured-address cliff](#november-2026-structured-address-cliff)
 - [Using the tools](#using-the-tools)
 - [Development](#development)
+- [Documentation](#documentation)
 - [Licence](#licence)
 - [Contribution](#contribution)
 - [Acknowledgements](#acknowledgements)
@@ -115,7 +116,7 @@ loopback, or put the server behind a gateway you trust before binding a
 routable address. Every release is verified over streamable HTTP with
 [scout](https://github.com/sebastienrousseau/scout) in both protocol
 eras and over SSE with the MCP SDK client; see
-[ADR 0001](docs/adr/0001-three-transports-one-command-line.md).
+[ADR 0001](https://github.com/sebastienrousseau/pacs008-mcp/blob/main/docs/adr/0001-three-transports-one-command-line.md).
 
 ```json
 {
@@ -165,7 +166,7 @@ The repair step is experimental — audit its output before submitting downstrea
 
 You can invoke the tools in-process — without a transport — straight through the
 server instance. This mirrors what an agent receives over stdio. The runnable
-version of this snippet lives in [`examples/mcp_tools.py`](examples/mcp_tools.py).
+version of this snippet lives in [`examples/mcp_tools.py`](https://github.com/sebastienrousseau/pacs008-mcp/blob/main/examples/mcp_tools.py).
 
 ```python
 import asyncio
@@ -232,10 +233,23 @@ A `Makefile` orchestrates the quality gates (kept in lockstep with CI):
 
 ```bash
 make check        # all gates (REQUIRED before commit)
-make test         # pytest
+make test         # pytest, 100% line+branch coverage
 make lint         # ruff + black
 make type-check   # mypy --strict
+make doc-coverage # interrogate, 100% docstrings
+make mutate       # mutmut over the tool handlers, gated
+make docs         # Sphinx site, warnings are errors
 ```
+
+---
+
+## Documentation
+
+- **Rendered docs:** [sebastienrousseau.github.io/pacs008-mcp](https://sebastienrousseau.github.io/pacs008-mcp/) — API reference, benchmarks, ADRs, changelog
+- **Runnable example:** [`examples/mcp_tools.py`](https://github.com/sebastienrousseau/pacs008-mcp/blob/main/examples/mcp_tools.py)
+- **Release history:** [CHANGELOG.md](https://github.com/sebastienrousseau/pacs008-mcp/blob/main/CHANGELOG.md)
+- **Core library docs:** [pacs008.com](https://pacs008.com)
+- **MCP specification:** [modelcontextprotocol.io](https://modelcontextprotocol.io)
 
 ---
 

@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Mutation testing of the tool handlers (mutmut 3): `make mutate` and
+  the `Mutants of the tool handlers` workflow run every mutant of
+  `pacs008_mcp` against the fast handler tests and fail below the floor
+  in the Makefile (90%; measured 98.6%, 479 of 486 checked mutants, on 2026-09-19).
+- Property-based tests (`tests/test_properties.py`, Hypothesis) over
+  the invariants the handlers keep for any input their schemas admit:
+  error envelopes always carry a non-empty `error`, every result is
+  JSON-serialisable, report summaries agree with their rows, the BIC
+  normaliser's parts re-join to the code, and the repaired address is
+  itself a valid `classify_address` input. Deterministic, with a
+  trimmed `mutation` profile for the mutant runs.
+- A docstring gate: `interrogate` at 100% over the package, run by
+  `make doc-coverage` and the lint job.
+- A rendered documentation site (Sphinx, Furo, MyST) at
+  <https://sebastienrousseau.github.io/pacs008-mcp/>: README, API
+  reference, benchmarks, ADRs, roadmap and changelog. Built with
+  warnings as errors on every pull request and deployed from `main`.
+- `tests/test_examples.py` executes `examples/mcp_tools.py`, so the
+  example fails the build instead of rotting.
+- ADR 0002 records why tools are registered explicitly.
+
+### Fixed
+
+- `validate_addresses` returned the library's `ValueError` as an
+  exception when a row's address column broke a field rule (an
+  over-length `bldg_nb`, say) instead of the `{"error": ...}` envelope
+  its docstring promises. Found by the property tests.
+
 - `--transport streamable-http` and `--transport sse`, with `--host` and
   `--port`. Streamable HTTP serves both current protocol revisions
   (2026-07-28 stateless with `server/discover`, and 2025-11-25 with the
@@ -19,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Tools, resources and the prompt are registered in one explicit block
+  before `main()` instead of with decorators: mutmut never mutates a
+  decorated function, so the decorator form kept every handler outside
+  mutation testing. The catalogue a client sees is unchanged (dumped
+  and diffed before and after; ADR 0002).
 - The server is built through a small compatibility shim so it runs on
   both supported majors of the `mcp` SDK: 2.x (`MCPServer`, the
   2026-07-28 stateless revision with `server/discover`) and 1.x

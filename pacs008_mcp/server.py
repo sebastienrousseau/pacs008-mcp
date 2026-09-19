@@ -260,7 +260,6 @@ def _address_to_dict(address: PostalAddress) -> dict[str, Any]:
     return data
 
 
-@server.tool(title="List pacs message types", annotations=_PURE_READ)
 def list_message_types() -> list[dict]:
     """List every supported ISO 20022 pacs message type and its human name.
 
@@ -279,7 +278,6 @@ def list_message_types() -> list[dict]:
     ]
 
 
-@server.tool(title="List scheme profiles", annotations=_PURE_READ)
 def list_schemes() -> list[dict]:
     """List every registered scheme / usage-guideline profile.
 
@@ -295,7 +293,6 @@ def list_schemes() -> list[dict]:
     return [{"scheme": name, "name": name} for name in sorted(canonical)]
 
 
-@server.tool(title="Get scheme profile rules", annotations=_PURE_READ)
 def get_scheme(scheme: _Scheme) -> dict:
     """Return the rule attributes of a scheme / usage-guideline profile.
 
@@ -324,7 +321,6 @@ def get_scheme(scheme: _Scheme) -> dict:
         return {"error": str(exc)}
 
 
-@server.tool(title="Get required fields", annotations=_PURE_READ)
 def get_required_fields(
     message_type: _MessageType,
 ) -> list[str]:
@@ -343,7 +339,6 @@ def get_required_fields(
         return [f"error: {exc}"]
 
 
-@server.tool(title="Get input JSON Schema", annotations=_PURE_READ)
 def get_input_schema(
     message_type: _MessageType,
 ) -> dict:
@@ -363,7 +358,6 @@ def get_input_schema(
         return {"error": str(exc)}
 
 
-@server.tool(title="Validate records against schema", annotations=_PURE_READ)
 def validate_records(
     message_type: _MessageType,
     records: Annotated[
@@ -415,7 +409,6 @@ def validate_records(
     }
 
 
-@server.tool(title="Validate records against a scheme", annotations=_PURE_READ)
 def validate_scheme(
     scheme: _Scheme,
     records: Annotated[
@@ -458,7 +451,6 @@ def validate_scheme(
     }
 
 
-@server.tool(title="Generate pacs XML from records", annotations=_PURE_READ)
 def generate_message(
     message_type: _MessageType,
     records: Annotated[
@@ -497,7 +489,6 @@ def generate_message(
         return json.dumps({"error": str(exc)})
 
 
-@server.tool(title="Validate XML against XSD", annotations=_PURE_READ)
 def validate_xml(
     message_type: _MessageType,
     xml: Annotated[
@@ -531,7 +522,6 @@ def validate_xml(
     }
 
 
-@server.tool(title="Parse inbound ISO 20022 XML", annotations=_PURE_READ)
 def parse_message(
     xml: Annotated[
         str,
@@ -575,7 +565,6 @@ def parse_message(
     }
 
 
-@server.tool(title="Convert MT103 to pacs.008 records", annotations=_PURE_READ)
 def convert_mt103(
     mt103_text: Annotated[
         str,
@@ -636,7 +625,6 @@ _ADDRESS_DICT_FIELD = Annotated[
 ]
 
 
-@server.tool(title="Classify a postal address", annotations=_PURE_READ)
 def classify_address(address: _ADDRESS_DICT_FIELD) -> dict:
     """Classify a postal address as structured, hybrid, or unstructured.
 
@@ -667,7 +655,6 @@ def classify_address(address: _ADDRESS_DICT_FIELD) -> dict:
     }
 
 
-@server.tool(title="Validate a postal address", annotations=_PURE_READ)
 def validate_address(
     address: _ADDRESS_DICT_FIELD,
     policy: _AddressPolicy = _DEFAULT_ADDRESS_POLICY,
@@ -711,7 +698,6 @@ def validate_address(
     }
 
 
-@server.tool(title="Repair an unstructured address", annotations=_PURE_READ)
 def repair_address(
     lines: Annotated[
         list[str],
@@ -760,9 +746,6 @@ def repair_address(
     }
 
 
-@server.tool(
-    title="Validate addresses in payment rows", annotations=_PURE_READ
-)
 def validate_addresses(
     addresses: Annotated[
         list[dict],
@@ -799,7 +782,13 @@ def validate_addresses(
     except ValueError:
         return {"error": f"Invalid policy: {policy!r}"}
 
-    errors = _lib_validate_addresses(addresses, resolved)
+    try:
+        errors = _lib_validate_addresses(addresses, resolved)
+    except (ValueError, TypeError) as exc:
+        # A row whose address column breaks a PostalAddress rule (an
+        # over-length field, a bad country) fails at construction inside
+        # the library; report it like every other bad input.
+        return {"error": str(exc)}
     return {
         "policy": resolved.value,
         "is_valid": not errors,
@@ -832,10 +821,6 @@ def validate_addresses(
 # ---------------------------------------------------------------------------
 
 
-@server.tool(
-    title="Verify a BIC (structural + optional directory lookup)",
-    annotations=_ONLINE_READ,
-)
 def verify_bic_online(
     bic: Annotated[
         str,
@@ -977,9 +962,6 @@ def verify_bic_online(
 # ---------------------------------------------------------------------------
 
 
-@server.resource(
-    "pacs008://message-types", title="pacs message-type catalogue"
-)
 def message_types_resource() -> str:
     """Expose the supported pacs message types as a JSON resource.
 
@@ -992,7 +974,6 @@ def message_types_resource() -> str:
     return json.dumps(list_message_types())
 
 
-@server.resource("pacs008://schemes", title="Scheme profile catalogue")
 def schemes_resource() -> str:
     """Expose the registered scheme / usage-guideline profiles as JSON.
 
@@ -1005,7 +986,6 @@ def schemes_resource() -> str:
     return json.dumps(list_schemes())
 
 
-@server.resource("pacs008://scheme/{scheme_id}", title="Scheme profile rules")
 def scheme_resource(
     scheme_id: Annotated[
         str,
@@ -1035,7 +1015,6 @@ def scheme_resource(
     return json.dumps(get_scheme(scheme_id))
 
 
-@server.prompt(title="Build a pacs.008 message")
 def build_pacs008_message(
     goal: Annotated[
         str,
@@ -1080,6 +1059,71 @@ def build_pacs008_message(
         "verify an externally produced document use validate_xml(message_type, "
         "xml); to classify an inbound message use parse_message(xml)."
     )
+
+
+# Tools, resources and the prompt are registered here, in definition
+# order, rather than with decorators on each function: mutmut 3 never
+# mutates a decorated function, so the decorator form left every
+# handler outside mutation testing. The registered object is the same
+# function, docstring and signature, and clients list them in this
+# order.
+server.tool(title="List pacs message types", annotations=_PURE_READ)(
+    list_message_types
+)
+server.tool(title="List scheme profiles", annotations=_PURE_READ)(list_schemes)
+server.tool(title="Get scheme profile rules", annotations=_PURE_READ)(
+    get_scheme
+)
+server.tool(title="Get required fields", annotations=_PURE_READ)(
+    get_required_fields
+)
+server.tool(title="Get input JSON Schema", annotations=_PURE_READ)(
+    get_input_schema
+)
+server.tool(title="Validate records against schema", annotations=_PURE_READ)(
+    validate_records
+)
+server.tool(title="Validate records against a scheme", annotations=_PURE_READ)(
+    validate_scheme
+)
+server.tool(title="Generate pacs XML from records", annotations=_PURE_READ)(
+    generate_message
+)
+server.tool(title="Validate XML against XSD", annotations=_PURE_READ)(
+    validate_xml
+)
+server.tool(title="Parse inbound ISO 20022 XML", annotations=_PURE_READ)(
+    parse_message
+)
+server.tool(title="Convert MT103 to pacs.008 records", annotations=_PURE_READ)(
+    convert_mt103
+)
+server.tool(title="Classify a postal address", annotations=_PURE_READ)(
+    classify_address
+)
+server.tool(title="Validate a postal address", annotations=_PURE_READ)(
+    validate_address
+)
+server.tool(title="Repair an unstructured address", annotations=_PURE_READ)(
+    repair_address
+)
+server.tool(
+    title="Validate addresses in payment rows", annotations=_PURE_READ
+)(validate_addresses)
+server.tool(
+    title="Verify a BIC (structural + optional directory lookup)",
+    annotations=_ONLINE_READ,
+)(verify_bic_online)
+server.resource(
+    "pacs008://message-types", title="pacs message-type catalogue"
+)(message_types_resource)
+server.resource("pacs008://schemes", title="Scheme profile catalogue")(
+    schemes_resource
+)
+server.resource("pacs008://scheme/{scheme_id}", title="Scheme profile rules")(
+    scheme_resource
+)
+server.prompt(title="Build a pacs.008 message")(build_pacs008_message)
 
 
 def main(argv: list[str] | None = None) -> None:
