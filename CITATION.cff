@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+cff-version: 1.2.0
+message: "If you use pacs008-mcp in research or production write-ups, please cite it as below."
+type: software
+title: "pacs008-mcp: Model Context Protocol server for ISO 20022 FI-to-FI credit transfers"
+abstract: >-
+  A Model Context Protocol server exposing the pacs008 library to AI agents:
+  sixteen tools for discovering ISO 20022 pacs message types and scheme
+  profiles, validating records and XML, generating validated pacs.008
+  messages, parsing inbound messages, converting legacy MT103 and checking
+  postal addresses against the structured-address rules.
+authors:
+  - family-names: Rousseau
+    given-names: Sebastien
+    email: sebastian.rousseau@gmail.com
+version: "0.0.12"
+date-released: "2026-08-29"
+license: "Apache-2.0 OR MIT"
+repository-code: "https://github.com/sebastienrousseau/pacs008-mcp"
+url: "https://pacs008.com"
+keywords:
+  - ISO 20022
+  - pacs.008
+  - credit transfer
+  - CBPR+
+  - Model Context Protocol
+  - MCP
+  - AI agents
+  - banking

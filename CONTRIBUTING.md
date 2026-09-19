@@ -5,9 +5,9 @@ the development workflow and standards.
 
 `pacs008-mcp` is the Model Context Protocol (MCP) server of the **pacs008
 suite** — alongside the core [`pacs008`](https://github.com/sebastienrousseau/pacs008)
-library and the [`pacs008-lsp`](https://github.com/sebastienrousseau/pacs008-lsp)
-Language Server. It depends on `pacs008` and exposes its services as agent
-tools, so most behaviour lives in the core library.
+library and the [`pacs008-loader-mt103`](https://github.com/sebastienrousseau/pacs008-loader-mt103)
+MT103 loader. It depends on both and exposes them as agent tools, so most
+behaviour lives in the core library.
 
 ## Development Setup
 
@@ -16,6 +16,8 @@ tools, so most behaviour lives in the core library.
 - Python 3.10+
 - [Poetry](https://python-poetry.org/docs/#installation)
 - Git with SSH commit signing configured
+- A Developer Certificate of Origin sign-off on every commit (`git commit -s`;
+  see [`DCO.txt`](DCO.txt))
 
 ### Setup
 
@@ -75,11 +77,18 @@ pip install poetry
    poetry run mypy pacs008_mcp/
    poetry run black --check pacs008_mcp/ tests/
    ```
-6. **Sign and commit**:
+6. **Sign off, sign and commit**:
    ```bash
-   git commit -S -m "feat: add my feature"
+   git commit -s -S -m "feat: add my feature"
    ```
 7. **Push** and open a pull request
+
+## Sign-off (Required)
+
+Every commit **must** carry a `Signed-off-by:` trailer, which is you
+certifying the [Developer Certificate of Origin](DCO.txt). `git commit -s`
+adds it; the `DCO` workflow fails a pull request that lacks one. To fix an
+existing branch: `git rebase --signoff main && git push --force-with-lease`.
 
 ## Commit Signing (Required)
 
@@ -101,7 +110,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 feat: add a new MCP tool wrapping a services helper
 fix: return an error payload instead of raising on bad input
 docs: update README with the MCP client config
-test: cover the validate_identifier tool
+test: cover the validate_scheme tool
 refactor: simplify the tool registration
 ```
 
@@ -111,6 +120,8 @@ refactor: simplify the tool registration
 - **Type hints:** Required on all public functions (mypy strict)
 - **Docstrings:** Required on all public classes and functions
 - **Tests:** Every new tool or change must include tests
+- **Decisions:** A change that shapes the server (a new transport, a new
+  registration pattern) gets a record in [`docs/adr/`](docs/adr/index.md)
 
 ## Testing
 
@@ -126,9 +137,15 @@ poetry run pytest tests/test_mcp_server.py -v
 
 - [ ] All tests pass (`poetry run pytest`)
 - [ ] Linters pass (`ruff check`, `mypy`, `black --check`)
-- [ ] Commits are signed
+- [ ] Commits are signed and carry a `Signed-off-by:` trailer
 - [ ] PR title follows conventional commit format
 - [ ] New features include tests and documentation
+
+## Governance
+
+Roles, decision making and how to become a maintainer are in
+[`GOVERNANCE.md`](GOVERNANCE.md); the release process is in
+[`RELEASING.md`](RELEASING.md).
 
 ## License
 

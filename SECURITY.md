@@ -49,8 +49,8 @@ In scope:
 
 - Code under `pacs008_mcp/` shipped to PyPI.
 - The example scripts under `examples/`.
-- The behaviour of the MCP server over its stdio transport, and the
-  tools and resources it exposes.
+- The behaviour of the MCP server over its stdio, streamable HTTP and
+  SSE transports, and the tools and resources it exposes.
 
 Out of scope:
 
@@ -67,9 +67,11 @@ Out of scope:
 An MCP server is driven by a model, which means its inputs are not
 necessarily written by a person who read the docs:
 
-- The server speaks MCP over stdio to its client. Do not expose that
-  transport over a network socket without adding authentication and TLS in
-  front of it; the protocol has neither.
+- The server speaks MCP over stdio by default. `--transport
+  streamable-http` and `--transport sse` open a listener that binds
+  `127.0.0.1` unless `--host` says otherwise and carries no authentication
+  or TLS of its own. Do not bind a routable address without a gateway in
+  front of it that adds both.
 - Records handed to the tools are validated, not executed. Treat payment
   data passed through them as PII subject to GDPR/PCI-DSS — debtor and
   creditor names and addresses reach the model's context and any
@@ -79,6 +81,20 @@ necessarily written by a person who read the docs:
   where egress matters, that is the one tool to gate.
 - Keep `pacs008-mcp`, `pacs008`, the `mcp` SDK, and the Python interpreter
   patched.
+
+## Continuous integration
+
+- `ci.yml` runs ruff, black, mypy --strict and pytest with the 100%
+  line+branch coverage gate on every push and pull request.
+- `codeql.yml` runs GitHub's CodeQL Python analysis on every push, pull
+  request and weekly.
+- `scorecard.yml` publishes the OpenSSF Scorecard weekly; every action
+  in every workflow is pinned by commit SHA.
+- `dco.yml` requires a `Signed-off-by:` trailer on every commit.
+- Dependabot (`.github/dependabot.yml`) proposes pip, GitHub Actions and
+  Docker updates weekly.
+- `release.yml` publishes to PyPI through OIDC trusted publishing with
+  SLSA build provenance, cosign signatures and SBOMs.
 
 ## Credits
 
