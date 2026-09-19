@@ -9,6 +9,7 @@
 [![Tests][tests-badge]][tests-url]
 [![Quality][quality-badge]][quality-url]
 [![Documentation][docs-badge]][docs-url]
+[![Glama MCP server score][glama-badge]][glama-url]
 
 **A [Model Context Protocol][mcp] server that exposes the [`pacs008`][core]
 ISO 20022 FI-to-FI Customer Credit Transfer library as tools for AI agents and
@@ -17,7 +18,7 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.6** — 15 MCP tools over stdio, all backed by the
+> **Latest release: v0.0.12** — 16 MCP tools over stdio, all backed by the
 > `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
 > MT103 → pacs.008 (MT→MX) migration path.
 
@@ -80,7 +81,7 @@ python -m pip install pacs008-mcp
 
 ## Quick Start
 
-Launch the server over stdio (the FastMCP default transport):
+Launch the server over stdio (the SDK's default transport):
 
 ```sh
 pacs008-mcp
@@ -135,7 +136,7 @@ The repair step is experimental — audit its output before submitting downstrea
 ## Using the tools
 
 You can invoke the tools in-process — without a transport — straight through the
-FastMCP instance. This mirrors what an agent receives over stdio. The runnable
+server instance. This mirrors what an agent receives over stdio. The runnable
 version of this snippet lives in [`examples/mcp_tools.py`](examples/mcp_tools.py).
 
 ```python
@@ -262,3 +263,5 @@ library and the [Model Context Protocol][mcp] Python SDK.
 [quality-url]: https://github.com/sebastienrousseau/pacs008-mcp/actions/workflows/ci.yml
 [tests-badge]: https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pacs008-mcp/ci.yml?branch=main&label=Tests&style=for-the-badge
 [tests-url]: https://github.com/sebastienrousseau/pacs008-mcp/actions/workflows/ci.yml
+[glama-badge]: https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp/badges/score.svg
+[glama-url]: https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp

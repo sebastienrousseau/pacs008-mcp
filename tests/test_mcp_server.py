@@ -22,10 +22,10 @@ import pytest
 
 pytest.importorskip("mcp")
 
-from mcp.server.fastmcp import FastMCP  # noqa: E402
 from pacs008.standards.bah import BusinessApplicationHeader  # noqa: E402
 from pacs008.xml.parser import ParsedMessage  # noqa: E402
 
+import pacs008_mcp._mcp_compat as compat  # noqa: E402
 import pacs008_mcp.server as server  # noqa: E402
 
 MSG_TYPE = "pacs.008.001.08"
@@ -63,7 +63,8 @@ def _tool_input_schema(name: str) -> dict:
     """Return the JSON input schema a client sees for the named tool."""
     for tool in asyncio.run(server.server.list_tools()):
         if tool.name == name:
-            return tool.inputSchema
+            # snake_case on mcp 2.x, camelCase on 1.x
+            return getattr(tool, "input_schema", None) or tool.inputSchema
     raise AssertionError(f"tool not registered: {name}")
 
 
@@ -74,7 +75,7 @@ def _tool_input_schema(name: str) -> dict:
 
 def test_server_and_main_are_well_formed():
     """The module exposes a FastMCP server and a callable ``main``."""
-    assert isinstance(server.server, FastMCP)
+    assert isinstance(server.server, compat.MCPServer)
     assert callable(server.main)
 
 
@@ -646,8 +647,9 @@ def test_verify_bic_online_is_open_world():
     """The lookup tool is annotated openWorldHint=True (reaches outside)."""
     ann = _annotations("verify_bic_online")
     assert ann is not None
-    assert ann.openWorldHint is True
-    assert ann.readOnlyHint is True
+    hints = ann.model_dump(by_alias=True)  # wire names on both SDK majors
+    assert hints["openWorldHint"] is True
+    assert hints["readOnlyHint"] is True
 
 
 def test_verify_bic_online_structural_only_no_fabrication(monkeypatch):
@@ -804,11 +806,10 @@ def test_call_tool_through_fastmcp():
 
     async def go():
         result = await server.server.call_tool("list_schemes", {})
-        block = result[0] if isinstance(result, list | tuple) else result
-        text = getattr(block, "text", None)
-        if text is None and isinstance(result, tuple):
-            text = json.dumps(result[1])
-        return json.loads(text)
+        structured = compat.result_structured(result)
+        if structured is not None:
+            return structured
+        return json.loads(compat.result_content(result)[0].text)
 
     payload = asyncio.run(go())
     # FastMCP wraps a bare list return under a "result" key.
