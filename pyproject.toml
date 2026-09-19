@@ -52,6 +52,27 @@ bandit = "^1.7.0"
 # tests (no real network I/O).
 respx = ">=0.21,<1"
 httpx = ">=0.24,<1"
+# Property-based tests over the handlers' invariants (tests/test_properties.py).
+hypothesis = ">=6.100,<7"
+interrogate = "^1.7.0"
+mutmut = "^3.7.0"
+
+# The rendered documentation site (docs/, built by .github/workflows/docs.yml).
+# Optional so a plain `poetry install` does not pull Sphinx into the venv.
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = ">=7,<10"
+furo = ">=2024.1"
+myst-parser = { version = ">=3,<5", extras = ["linkify"] }
+sphinx-autodoc-typehints = ">=2,<4"
+sphinx-copybutton = ">=0.5,<1"
+
+[tool.poetry.urls]
+Documentation = "https://sebastienrousseau.github.io/pacs008-mcp/"
+Changelog = "https://github.com/sebastienrousseau/pacs008-mcp/blob/main/CHANGELOG.md"
+Issues = "https://github.com/sebastienrousseau/pacs008-mcp/issues"
 
 [build-system]
 requires = ["poetry-core"]
@@ -78,6 +99,39 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-fail-under=100",
 ]
+
+[tool.mutmut]
+# Mutation testing (mutmut 3): every tool handler is mutated and each
+# mutant must be caught by the fast tests. The stdio/HTTP end-to-end
+# checks, the suite conformance file and the packaging tests are
+# excluded from the selection because they do not test handler logic.
+source_paths = ["pacs008_mcp"]
+# The example is executed by a test, so it must exist in mutmut's
+# working copy beside the tests.
+also_copy = ["examples"]
+# The SDK-compat shim branches on the installed MCP SDK version; the
+# branches for other versions cannot be reached on one install, so its
+# surviving mutants say nothing about the tests. Handlers only.
+# _cli.py is argparse wiring: flag names, defaults and help prose. Its
+# tests pin the flags and defaults; a mutant of a help sentence or a
+# parser description is not a bug a test should have to name. The
+# transport dispatch it drives, _transports.run, is mutated.
+do_not_mutate = ["pacs008_mcp/_mcp_compat.py", "pacs008_mcp/_cli.py"]
+pytest_add_cli_args = ["-q", "-p", "no:cacheprovider", "--no-cov"]
+pytest_add_cli_args_test_selection = [
+    "tests/test_mcp_server.py",
+    "tests/test_mcp_sdk_compat.py",
+    "tests/test_properties.py",
+    "tests/test_transports.py",
+]
+
+[tool.interrogate]
+fail-under = 100
+ignore-init-method = true
+ignore-semiprivate = false
+ignore-private = false
+ignore-magic = true
+exclude = ["tests", "benches", "examples", "docs", "scripts"]
 
 [tool.coverage.run]
 branch = true

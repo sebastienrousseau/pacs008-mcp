@@ -39,3 +39,9 @@ tmp/
 .mypy_cache/
 .ruff_cache/
 pacs008_mcp.egg-info/
+
+# Mutation testing working copy (mutmut 3)
+mutants/
+
+# Sphinx build output
+docs/_build/
