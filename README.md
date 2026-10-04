@@ -11,6 +11,10 @@
 [![Documentation][docs-badge]][docs-url]
 [![Glama MCP server score][glama-badge]][glama-url]
 
+<p align="center">
+  <img src=".github/demo.gif" alt="pacs008-mcp Demo" width="100%" />
+</p>
+
 **A [Model Context Protocol][mcp] server that exposes the [`pacs008`][core]
 ISO 20022 FI-to-FI Customer Credit Transfer library as tools for AI agents and
 assistants** — discover message types and scheme profiles, validate records
@@ -18,7 +22,7 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.12** — 16 MCP tools over stdio, streamable HTTP or
+> **Latest release: v0.0.13** — 16 MCP tools over stdio, streamable HTTP or
 > SSE, all backed by the `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
 > MT103 → pacs.008 (MT→MX) migration path.
 

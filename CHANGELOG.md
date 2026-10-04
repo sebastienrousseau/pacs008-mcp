@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-10-04
+
 ### Added
+
+- Added framework adapters (`as_langchain_tools`, `as_crewai_tools`, `as_llamaindex_tools`) in `pacs008_mcp.adapters` for seamless agent integration.
+- Added animated terminal demo (`.github/demo.gif`) and `.github/demo.tape` with `make demo` target.
+- Added normalized dual-licensing structure with `LICENSES/Apache-2.0.txt` and `LICENSES/MIT.txt`.
 
 - Mutation testing of the tool handlers (mutmut 3): `make mutate` and
   the `Mutants of the tool handlers` workflow run every mutant of
@@ -260,6 +266,11 @@ entry was written at the time.
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[0.0.13]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.13
+[0.0.12]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.12
+[0.0.9]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.9
+[0.0.8]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.8
+[0.0.7]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.7
 [0.0.6]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.6
 [0.0.5]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.5
 [0.0.4]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.4
