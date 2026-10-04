@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-10-04
+
+### Changed
+
+- Standardize license section heading in README to License for Glama directory and registry matcher consistency.
+- Update locked dependencies to resolve transitive vulnerabilities.
+
 ## [0.0.13] - 2026-10-04
 
 ### Added
@@ -266,6 +273,7 @@ entry was written at the time.
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[0.0.14]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.14
 [0.0.13]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.13
 [0.0.12]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.12
 [0.0.9]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.9
