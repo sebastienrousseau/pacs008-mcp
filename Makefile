@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format type-check security clean examples doc-coverage mutate docs check
+.PHONY: help install dev test lint format type-check security clean examples doc-coverage mutate docs check demo
 
 # Mutation score floor for the tool handlers: 98.6% (479 of 486 checked
 # mutants) on 2026-09-19. The floor sits under the measurement so one
@@ -66,3 +66,8 @@ docs: ## Build the Sphinx site, warnings are errors (poetry install --with docs)
 	$(POETRY) run sphinx-build -W --keep-going -b html docs docs/_build/html
 
 check: lint type-check test doc-coverage examples ## Run all checks
+
+demo: ## Render terminal demo GIF using VHS
+	@command -v vhs >/dev/null 2>&1 || { echo "vhs not found. Install from https://github.com/charmbracelet/vhs" >&2; exit 1; }
+	PATH="$(CURDIR)/.venv/bin:$$PATH" vhs .github/demo.tape
+
