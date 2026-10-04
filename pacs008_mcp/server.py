@@ -96,7 +96,7 @@ server = build_server("pacs008", __version__)
 #
 # These hints let MCP clients (and the Glama quality grader) reason about
 # safety, caching, and auto-approval without executing the tool.
-_PURE_READ = ToolAnnotations(
+_PURE_READ = ToolAnnotations(  # type: ignore[call-arg]
     readOnlyHint=True,
     destructiveHint=False,
     idempotentHint=True,
@@ -108,7 +108,7 @@ _PURE_READ = ToolAnnotations(
 # GET against that caller-supplied external system. It never mutates anything,
 # so it stays ``readOnlyHint`` + ``idempotentHint``, but it is explicitly
 # ``openWorldHint=True`` so MCP clients know it can contact an external service.
-_ONLINE_READ = ToolAnnotations(
+_ONLINE_READ = ToolAnnotations(  # type: ignore[call-arg]
     readOnlyHint=True,
     destructiveHint=False,
     idempotentHint=True,
