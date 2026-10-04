@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
 # pacs008-mcp: An MCP Server for ISO 20022 FI-to-FI Credit Transfers
 
 ![pacs008-mcp banner][banner]
