@@ -6,12 +6,12 @@
     "url": "https://github.com/sebastienrousseau/pacs008-mcp",
     "source": "github"
   },
-  "version": "0.0.13",
+  "version": "0.0.14",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "pacs008-mcp",
-      "version": "0.0.13",
+      "version": "0.0.14",
       "transport": {
         "type": "stdio"
       }

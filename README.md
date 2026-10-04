@@ -24,7 +24,7 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.13** — 16 MCP tools over stdio, streamable HTTP or
+> **Latest release: v0.0.14**: 16 MCP tools over stdio, streamable HTTP or
 > SSE, all backed by the `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
 > MT103 → pacs.008 (MT→MX) migration path.
 
@@ -279,9 +279,9 @@ Part of the **ISO 20022 MCP Suite** — open-source, Apache-2.0 licensed MCP ser
 
 ---
 
-## Licence
+## License
 
-Licensed under the [Apache Licence, Version 2.0][01]. Any contribution submitted
+Licensed under the [Apache License, Version 2.0][01]. Any contribution submitted
 for inclusion shall be licensed as above, without additional terms.
 
 ## Contribution
