@@ -39,7 +39,7 @@ messages, all from your favourite MCP client.
 - [Using the tools](#using-the-tools)
 - [Development](#development)
 - [Documentation](#documentation)
-- [Licence](#licence)
+- [License](#license)
 - [Contribution](#contribution)
 - [Acknowledgements](#acknowledgements)
 
