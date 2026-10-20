@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Runtime dependencies of the container image (Dockerfile), hash-pinned in
+# docker.txt so the image build installs nothing unpinned (OpenSSF
+# Scorecard Pinned-Dependencies). The package itself goes on with
+# `--no-deps`. Mirrors pyproject [tool.poetry.dependencies]; the image is
+# the core install, without the `online` extra.
+# Regenerate (the image's Python, every Linux architecture):
+#   uv pip compile --generate-hashes --universal --python-version 3.14 \
+#     requirements/docker.in -o requirements/docker.txt
+pacs008>=0.0.10
+pacs008-loader-mt103>=0.0.1
+mcp>=1.2,<3
+cryptography>=50.0.0
