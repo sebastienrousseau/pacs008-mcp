@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.15] - 2026-10-20
 
+### Security
+
+- `mcp` is constrained to `>=1.30.0,!=2.0.*,!=2.1.*,<3`, so no release
+  affected by GHSA-84m7-p3x7-pcfv (unbounded streamable HTTP session
+  accumulation: mcp `>=1.8.0,<1.30.0` and `>=2.0.0,<2.2.0`) can resolve.
+  The previous `>=1.2,<3` admitted them.
+
 ### Fixed
 
 - `validate_xml` answers a document that declares DTD entities (XXE,

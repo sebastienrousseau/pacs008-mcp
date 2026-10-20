@@ -21,7 +21,10 @@ pacs008-mcp = "pacs008_mcp.server:main"
 python = ">=3.10,<4.0"
 pacs008 = ">=0.0.10"
 pacs008-loader-mt103 = ">=0.0.1"
-mcp = ">=1.2,<3"
+# mcp < 1.30.0 and 2.0.x/2.1.x are affected by GHSA-84m7-p3x7-pcfv
+# (unbounded streamable HTTP session accumulation; this server serves
+# streamable HTTP), so no affected release can resolve.
+mcp = ">=1.30.0,!=2.0.*,!=2.1.*,<3"
 # Optional: only needed for the online BIC directory lookup in
 # ``verify_bic_online``. Installed via the ``online`` extra.
 httpx = { version = ">=0.24,<1", optional = true }
