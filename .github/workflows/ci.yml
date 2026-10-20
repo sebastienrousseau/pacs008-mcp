@@ -74,3 +74,11 @@ jobs:
 
       - name: Enforce 100% docstring coverage
         run: interrogate -c pyproject.toml pacs008_mcp
+
+      # Cyclomatic, Halstead and length limits against the baseline in the
+      # script; cognitive complexity against complexipy-snapshot.json. Both
+      # baselines may only shrink.
+      - name: Complexity
+        run: |
+          python scripts/check_complexity.py
+          complexipy pacs008_mcp scripts benches examples fuzz tests --max-complexity-allowed 15 --quiet
