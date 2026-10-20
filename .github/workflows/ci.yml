@@ -64,10 +64,10 @@ jobs:
           pip install --no-deps -e .
 
       - name: Ruff check
-        run: ruff check pacs008_mcp/ benches/ scripts/
+        run: ruff check pacs008_mcp/ tests/ benches/ scripts/ fuzz/
 
       - name: Black check
-        run: black --check pacs008_mcp/ tests/ benches/ scripts/
+        run: black --check pacs008_mcp/ tests/ benches/ scripts/ fuzz/
 
       - name: Mypy
         run: mypy pacs008_mcp/
