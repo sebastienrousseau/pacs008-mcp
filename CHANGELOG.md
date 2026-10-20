@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-10-20
+
+### Fixed
+
+- `validate_xml` answers a document that declares DTD entities (XXE,
+  billion laughs) with an `{"error": "refused XML: EntitiesForbidden(...)"}`
+  payload. defusedxml's refusal used to escape the tool, so the client saw
+  only an opaque "Error executing tool validate_xml".
+- `scripts/check_suite_consistency.py` compares this tree with the
+  published `pacs008-mcp`, not with the `pacs008` core it was copied from,
+  so the scheduled Suite Consistency job no longer reports a
+  never-released bump that does not exist. It still reports, correctly,
+  that `pacs008` and `pacs008-loader-mt103` are published at 0.0.12 while
+  this server is ahead.
+
+### Added
+
+- Coverage-guided fuzzing: `fuzz/fuzz_tools.py` (Atheris) feeds arbitrary
+  text to `validate_xml`, `parse_message` and `convert_mt103`, run by the
+  `Fuzz` workflow on every change and for 30 minutes weekly;
+  `tests/test_untrusted_text.py` holds the fixed and property-based cases
+  of the same contract.
+- A complexity gate in the lint job: `scripts/check_complexity.py`
+  (cyclomatic, Halstead, function and file length) and `complexipy`
+  (cognitive), each against a committed baseline of the offenders that
+  predate it, which may only shrink.
+- `docs/POLICIES.md`, the toolchain policy the README's Python badge
+  links to.
+
+### Changed
+
+- Every `pip install` in CI, the docs build and the container image is
+  hash-pinned: `requirements/ci.txt`, `docs.txt`, `fuzz.txt` and
+  `docker.txt`, with the package installed `--no-deps` on top.
+- The container image runs Python 3.14 (`python:3.14-slim`, pinned by
+  digest) and drops the `PACS008_PIP_SPEC` build argument and the git
+  client it needed; the runtime dependencies come from
+  `requirements/docker.txt`.
+- GitHub Actions updated and pinned by commit SHA: checkout 7.0.1,
+  setup-python 7.0.0, setup-node 7.1.0, upload-artifact 7.0.2,
+  attest-build-provenance 4.2.2, gh-action-pypi-publish 1.14.2,
+  sbom-action 0.24.3, scorecard-action 2.5.0, codeql-action 4.39.0.
+- Development tools: ruff `>=0.1,<0.18`, mypy `>=1.11,<3.0`; the release
+  tooling floors `virtualenv>=21.14.8`.
+- The README badge row follows the portfolio template: Build, Registry,
+  Docs, OpenSSF Scorecard, License and Python floor, then Glama.
+- `scripts/verify_versions.py` checks each manifest in its own helper; the
+  output and exit codes are unchanged.
+- `CITATION.cff` and `SECURITY.md` carry the current version again (both
+  had been left at 0.0.12).
+
 ## [0.0.14] - 2026-10-04
 
 ### Changed

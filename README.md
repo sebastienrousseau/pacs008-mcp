@@ -25,9 +25,10 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.14**: 16 MCP tools over stdio, streamable HTTP or
-> SSE, all backed by the `pacs008` library, for Python 3.10+. Adds `convert_mt103`, the legacy SWIFT
-> MT103 → pacs.008 (MT→MX) migration path.
+> **Latest release: v0.0.15**: 16 MCP tools over stdio, streamable HTTP or
+> SSE, all backed by the `pacs008` library, for Python 3.10+. `validate_xml`
+> now refuses DTD entities with an error payload, and every CI and image
+> install is hash-pinned.
 
 ## Contents
 
