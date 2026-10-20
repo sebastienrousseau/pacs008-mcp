@@ -29,11 +29,10 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install the package, its test tools and mutmut
+      - name: Install the package, its test tools and mutmut (hash-pinned)
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[online]"
-          pip install pytest pytest-cov respx hypothesis "mutmut>=3.7,<4"
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps -e .
 
       - name: Run the mutants
         env:

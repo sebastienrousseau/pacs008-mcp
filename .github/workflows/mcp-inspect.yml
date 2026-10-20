@@ -25,10 +25,10 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install pacs008-mcp
+      - name: Install pacs008-mcp (hash-pinned dependencies)
         run: |
-          python -m pip install --upgrade pip
-          pip install .
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps .
 
       - name: List tools via MCP Inspector CLI
         run: npx -y @modelcontextprotocol/inspector --cli pacs008-mcp --method tools/list

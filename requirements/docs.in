@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Sphinx toolchain for .github/workflows/docs.yml, hash-pinned in docs.txt
+# (OpenSSF Scorecard Pinned-Dependencies). Mirrors the poetry `docs` group;
+# the package installs with `--no-deps` on top. The docs job runs on 3.12.
+# Regenerate:
+#   uv pip compile --generate-hashes --universal --python-version 3.12 \
+#     requirements/docs.in -o requirements/docs.txt
+-r ci.in
+sphinx>=7,<10
+furo>=2024.1
+myst-parser[linkify]>=3,<5
+sphinx-autodoc-typehints>=2,<4
+sphinx-copybutton>=0.5,<1

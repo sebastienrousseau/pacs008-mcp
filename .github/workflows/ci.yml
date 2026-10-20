@@ -26,13 +26,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Installs this package editable (so coverage collects); its core
-      # `pacs008` dependency resolves from PyPI.
-      - name: Install this package (+ pacs008 from PyPI)
+      # Installs this package editable (so coverage collects). Its runtime
+      # dependencies and the test toolchain come hash-pinned from
+      # requirements/ci.txt; the package itself goes on with --no-deps.
+      - name: Install this package
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[online]"
-          pip install pytest pytest-cov respx hypothesis
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps -e .
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
@@ -56,13 +56,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Install this package (pacs008 resolves from PyPI) so mypy can resolve
-      # the `pacs008` imports.
-      - name: Install this package (+ pacs008 from PyPI)
+      # Install this package so mypy can resolve the `pacs008` imports; the
+      # toolchain and runtime dependencies come hash-pinned.
+      - name: Install this package
         run: |
-          python -m pip install --upgrade pip
-          pip install ".[online]"
-          pip install ruff black mypy interrogate
+          pip install --require-hashes -r requirements/ci.txt
+          pip install --no-deps -e .
 
       - name: Ruff check
         run: ruff check pacs008_mcp/ benches/ scripts/
