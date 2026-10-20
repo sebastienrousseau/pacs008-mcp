@@ -123,6 +123,7 @@ pytest_add_cli_args_test_selection = [
     "tests/test_mcp_sdk_compat.py",
     "tests/test_properties.py",
     "tests/test_transports.py",
+    "tests/test_untrusted_text.py",
 ]
 
 [tool.interrogate]
