@@ -4,14 +4,15 @@
 
 ![pacs008-mcp banner][banner]
 
-[![PyPI Version][pypi-badge]][07]
-[![Python Versions][python-versions-badge]][07]
-[![PyPI Downloads][pypi-downloads-badge]][07]
-[![Licence][licence-badge]][01]
-[![Tests][tests-badge]][tests-url]
-[![Quality][quality-badge]][quality-url]
-[![Documentation][docs-badge]][docs-url]
-[![Glama MCP server score][glama-badge]][glama-url]
+<p align="center">
+  <a href="https://github.com/sebastienrousseau/pacs008-mcp/actions"><img src="https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pacs008-mcp/ci.yml?style=for-the-badge&logo=github" alt="Build" height="28" /></a>
+  <a href="https://pypi.org/project/pacs008-mcp/"><img src="https://img.shields.io/pypi/v/pacs008-mcp?style=for-the-badge&color=fc8d62&logo=python" alt="Registry" height="28" /></a>
+  <a href="https://sebastienrousseau.github.io/pacs008-mcp/"><img src="https://img.shields.io/badge/docs-site-blue?style=for-the-badge&labelColor=555555&logo=readthedocs" alt="Docs" height="28" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pacs008-mcp"><img src="https://img.shields.io/ossf-scorecard/github.com/sebastienrousseau/pacs008-mcp?style=for-the-badge&label=OpenSSF%20Scorecard&logo=openssf" alt="OpenSSF Scorecard" height="28" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg?style=for-the-badge" alt="License: Apache-2.0 OR MIT" height="28" /></a>
+  <a href="https://github.com/sebastienrousseau/pacs008-mcp/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.10%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.10 or newer" height="28" /></a>
+  <a href="https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp"><img src="https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp/badges/score.svg" alt="Glama MCP score" height="28" /></a>
+</p>
 
 <p align="center">
   <img src=".github/demo.gif" alt="pacs008-mcp Demo" width="100%" />
@@ -297,19 +298,6 @@ library and the [Model Context Protocol][mcp] Python SDK.
 [01]: https://opensource.org/license/apache-2-0/
 [04]: https://github.com/sebastienrousseau/pacs008-mcp/blob/main/CONTRIBUTING.md
 [05]: https://github.com/sebastienrousseau/pacs008-mcp/graphs/contributors
-[07]: https://pypi.org/project/pacs008-mcp/
 [core]: https://github.com/sebastienrousseau/pacs008
 [mcp]: https://modelcontextprotocol.io
 [banner]: https://kura.pro/pacs008-mcp/images/banners/banner-pacs008-mcp.svg 'pacs008-mcp'
-[docs-badge]: https://img.shields.io/badge/Docs-pacs008.com-blue?style=for-the-badge
-[docs-url]: https://pacs008.com/
-[licence-badge]: https://img.shields.io/pypi/l/pacs008-mcp?style=for-the-badge
-[pypi-badge]: https://img.shields.io/pypi/v/pacs008-mcp?style=for-the-badge
-[pypi-downloads-badge]: https://img.shields.io/pypi/dm/pacs008-mcp.svg?style=for-the-badge
-[python-versions-badge]: https://img.shields.io/pypi/pyversions/pacs008-mcp.svg?style=for-the-badge
-[quality-badge]: https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pacs008-mcp/ci.yml?branch=main&label=Quality&style=for-the-badge
-[quality-url]: https://github.com/sebastienrousseau/pacs008-mcp/actions/workflows/ci.yml
-[tests-badge]: https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pacs008-mcp/ci.yml?branch=main&label=Tests&style=for-the-badge
-[tests-url]: https://github.com/sebastienrousseau/pacs008-mcp/actions/workflows/ci.yml
-[glama-badge]: https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp/badges/score.svg
-[glama-url]: https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp

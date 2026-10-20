@@ -13,6 +13,7 @@ api
 benchmarks
 adr/index
 roadmap
+POLICIES
 changelog
 ```
 
