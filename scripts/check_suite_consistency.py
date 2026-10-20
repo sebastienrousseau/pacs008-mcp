@@ -50,6 +50,10 @@ MEMBERS = (
     "pacs008-loader-mt103",
 )
 
+#: The member this checkout builds. The script was copied from the core,
+#: where this and ``MEMBERS[0]`` are the same; here they are not.
+THIS = "pacs008-mcp"
+
 TIMEOUT = 30
 
 
@@ -78,13 +82,14 @@ def check() -> tuple[list[str], dict[str, object]]:
     published = {name: published_version(name) for name in MEMBERS}
 
     core_published = published[MEMBERS[0]]
+    this_published = published[THIS]
 
-    # 1. The tree must not disagree with what was released. A bump that
-    #    was never tagged looks exactly like this and nothing else
-    #    notices.
-    if core_published and core_published != tree:
+    # 1. The tree must not disagree with what this repository released. A
+    #    bump that was never tagged looks exactly like this and nothing
+    #    else notices.
+    if this_published and this_published != tree:
         problems.append(
-            f"{MEMBERS[0]}: tree is {tree} but PyPI has {core_published}. "
+            f"{THIS}: tree is {tree} but PyPI has {this_published}. "
             f"Either the release was never tagged, or the tree is behind."
         )
 
