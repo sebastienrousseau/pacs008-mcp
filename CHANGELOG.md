@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   affected by GHSA-84m7-p3x7-pcfv (unbounded streamable HTTP session
   accumulation: mcp `>=1.8.0,<1.30.0` and `>=2.0.0,<2.2.0`) can resolve.
   The previous `>=1.2,<3` admitted them.
+- Security floors on mcp's transitive stack, matching pain001-mcp:
+  `anyio >= 4.14.2`, `httpx2 >= 2.12.0`, `httpcore2 >= 2.10.0`,
+  `pyjwt[crypto] >= 2.15.0`, `opentelemetry-api >= 1.45.1`
+  (GHSA-xcq7-p3pf-p88h) and `certifi >= 2026.10.19` (PYSEC-2026-4320).
 
 ### Fixed
 

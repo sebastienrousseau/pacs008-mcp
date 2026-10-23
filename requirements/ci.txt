@@ -16,6 +16,7 @@ anyio==4.15.1 \
     --hash=sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101 \
     --hash=sha256:9f28306018cbd6d329e64a36d58256edff76dd996fe423bc957326e578b82a94
     # via
+    #   -r requirements/ci.in
     #   httpx
     #   httpx2
     #   mcp
@@ -121,6 +122,7 @@ certifi==2026.10.19 \
     --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
     --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
     # via
+    #   -r requirements/ci.in
     #   httpcore
     #   httpx
 cffi==2.1.1 ; platform_python_implementation != 'PyPy' \
@@ -584,11 +586,15 @@ httpcore==1.0.9 \
 httpcore2==2.14.0 ; python_full_version < '3.11' and sys_platform != 'emscripten' \
     --hash=sha256:4c4f64f4b544afeb778c42c0ffb5941b29e671157e90ed3f6dc787c4bca90cd1 \
     --hash=sha256:4f57a1a8249fe6af589d935cfd456f1d13bbdcb0f0fc72af9142368fc94811d7
-    # via httpx2
+    # via
+    #   -r requirements/ci.in
+    #   httpx2
 httpcore2==2.15.1 ; python_full_version >= '3.11' and sys_platform != 'emscripten' \
     --hash=sha256:730f603058c260a3288378217b464713350c23e3b8fe8bba753701054032d98a \
     --hash=sha256:a94b6b3e6260e1a3f035915408d3dcd7dc8e844c2b544b642e227cf98a747af0
-    # via httpx2
+    # via
+    #   -r requirements/ci.in
+    #   httpx2
 httptools==0.9.0 \
     --hash=sha256:02bc5b3dcb6394b9d825fd62a7bfa0b2943063a3c89abc4492ad45e334a20eb5 \
     --hash=sha256:050f7ab098121873c8f13e35857f97ab60a76185c8302bde9a384939bb7c3b96 \
@@ -719,11 +725,15 @@ httpx==0.28.1 \
 httpx2==2.14.0 ; python_full_version < '3.11' \
     --hash=sha256:47ad61a3c40282cd8d0dc96311531f00f5bfc71a066c6fe3b36d8f63fb9e4f6e \
     --hash=sha256:9d20c13a10bae1773a0be3b0f1e5beeb4bdd549bc3a2ba18efa32897c65403e4
-    # via mcp
+    # via
+    #   -r requirements/ci.in
+    #   mcp
 httpx2==2.15.1 ; python_full_version >= '3.11' \
     --hash=sha256:75841cd83d16b417f7d6da8f2089ce8120806efdbf96af37d46c5129c49015be \
     --hash=sha256:ff75485308fbe441e75b1218546e4e78d884df41e1a9741c1f79335ed8fcfef7
-    # via mcp
+    # via
+    #   -r requirements/ci.in
+    #   mcp
 httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten' \
     --hash=sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60 \
     --hash=sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32
@@ -1561,6 +1571,7 @@ opentelemetry-api==1.45.1 \
     --hash=sha256:aa38ed19bcc084ba42782a73255b3582283eced7ad6dddbd6695189e69adfb75 \
     --hash=sha256:b31553efa588ae44bc306f863c785c5333a9ecc091248c6ee68b4b6c87fdedfb
     # via
+    #   -r requirements/ci.in
     #   fastapi
     #   mcp
 packaging==26.3 \
@@ -1814,7 +1825,9 @@ pygments==2.21.0 \
 pyjwt==2.15.1 \
     --hash=sha256:42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193 \
     --hash=sha256:4f259e80cdfb6b3fc18a7de51fd1ef9ec79652f25019bae68975ca2468a34df8
-    # via mcp
+    # via
+    #   -r requirements/ci.in
+    #   mcp
 pytest==9.1.1 \
     --hash=sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313 \
     --hash=sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c

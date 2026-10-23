@@ -5,3 +5,5 @@ twine
 dulwich>=1.2.9
 virtualenv>=21.14.8
 urllib3>=2.8.0
+# certifi < 2026.10.19 is affected by PYSEC-2026-4320.
+certifi>=2026.10.19

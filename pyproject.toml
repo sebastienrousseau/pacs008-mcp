@@ -35,6 +35,17 @@ httpx = { version = ">=0.24,<1", optional = true }
 # here so the patched line is the only resolvable one; the pins in
 # requirements/ already sit at 50.0.0.
 cryptography = ">=50.0.0"
+# Security floors for MCP's transitive async, HTTP, JWT and tracing stack,
+# matching pain001-mcp, so no release with a published advisory can resolve.
+anyio = ">=4.14.2,<5"
+httpx2 = ">=2.12.0"
+httpcore2 = { version = ">=2.10.0", markers = "sys_platform != 'emscripten'" }
+pyjwt = { version = ">=2.15.0", extras = ["crypto"] }
+# mcp 2.x requires opentelemetry-api; < 1.45.1 parses tracestate
+# without a bound (GHSA-xcq7-p3pf-p88h).
+opentelemetry-api = ">=1.45.1"
+# certifi < 2026.10.19 is affected by PYSEC-2026-4320.
+certifi = ">=2026.10.19"
 [tool.poetry.extras]
 # `pip install 'pacs008-mcp[online]'` pulls in httpx so verify_bic_online can
 # reach a configured BIC directory endpoint. Core install stays HTTP-free.
