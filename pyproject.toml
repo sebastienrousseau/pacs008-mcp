@@ -19,8 +19,10 @@ pacs008-mcp = "pacs008_mcp.server:main"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-pacs008 = ">=0.0.10"
-pacs008-loader-mt103 = ">=0.0.1"
+# The suite releases in lockstep: this server needs the core and the MT103
+# loader of its own version.
+pacs008 = ">=0.0.15,<1"
+pacs008-loader-mt103 = ">=0.0.15,<1"
 # mcp < 1.30.0 and 2.0.x/2.1.x are affected by GHSA-84m7-p3x7-pcfv
 # (unbounded streamable HTTP session accumulation; this server serves
 # streamable HTTP), so no affected release can resolve.

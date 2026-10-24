@@ -29,9 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/check_suite_consistency.py` compares this tree with the
   published `pacs008-mcp`, not with the `pacs008` core it was copied from,
   so the scheduled Suite Consistency job no longer reports a
-  never-released bump that does not exist. It still reports, correctly,
-  that `pacs008` and `pacs008-loader-mt103` are published at 0.0.12 while
-  this server is ahead.
+  never-released bump that does not exist.
 
 ### Added
 
@@ -49,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Requires `pacs008 >= 0.0.15, < 1` and `pacs008-loader-mt103 >= 0.0.15,
+  < 1` (were `>= 0.0.10` and `>= 0.0.1`): the suite releases in lockstep,
+  and the loader's 0.0.15 parses SWIFT block 4 in linear time
+  (GHSA-4f6g-425r-ff5p). The hash-pinned trees move both from 0.0.12 to
+  0.0.15.
 - Every `pip install` in CI, the docs build and the container image is
   hash-pinned: `requirements/ci.txt`, `docs.txt`, `fuzz.txt` and
   `docker.txt`, with the package installed `--no-deps` on top.

@@ -141,6 +141,7 @@ certifi==2026.10.19 \
     #   -r requirements/ci.in
     #   httpcore
     #   httpx
+    #   pacs008
     #   requests
 cffi==2.1.1 ; platform_python_implementation != 'PyPy' \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
@@ -1695,15 +1696,15 @@ packaging==26.3 \
     #   black
     #   pytest
     #   sphinx
-pacs008==0.0.12 \
-    --hash=sha256:598c716b4278e84394aab5ee1391e17e2c8c6ad2c9ce5f95b13e1bca7580daa6 \
-    --hash=sha256:61d5f9901b76de494ac459703cfb1d025261c098b6ef783ba6c5c54ec56afdf9
+pacs008==0.0.15 \
+    --hash=sha256:39c9f2782990ee02d263707413e565b3db3d6982abae14ae239a4664d70a0cfb \
+    --hash=sha256:e5c91e5ce8e7538db8dddf4bc1612c117108f584d3d83c0218634bb777e61220
     # via
     #   -r requirements/ci.in
     #   pacs008-loader-mt103
-pacs008-loader-mt103==0.0.12 \
-    --hash=sha256:c4e6ec2c6b0b2ecbabbd330cb6d0f606d58828da4bf81d4e3d176af7457830ad \
-    --hash=sha256:fe9216a5f46407487f4187d1b1d75d1c3caf61ce1298bdeadcf694035582faef
+pacs008-loader-mt103==0.0.15 \
+    --hash=sha256:7897a1e99707c1a0d2240c95f071b16c0bef75087d5c749f709347e913fcf9a8 \
+    --hash=sha256:b92a75e47f9bd1b5fa05b60e5c19e0c50eb6cfed5c9b83a4c3a8b061fd9e82de
     # via -r requirements/ci.in
 pathspec==1.1.1 \
     --hash=sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a \
