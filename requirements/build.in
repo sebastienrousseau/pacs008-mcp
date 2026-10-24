@@ -1,4 +1,7 @@
-# Build/publish tooling for the release "publish" + "sbom" jobs.
+# Build/publish tooling for the release "publish" + "sbom" jobs, which run on
+# Python 3.12. Regenerate:
+#   uv pip compile --generate-hashes --universal --python-version 3.12 \
+#     requirements/build.in -o requirements/build.txt
 poetry
 twine
 # Security floors for transitive dependencies
@@ -7,3 +10,6 @@ virtualenv>=21.14.8
 urllib3>=2.8.0
 # certifi < 2026.10.19 is affected by PYSEC-2026-4320.
 certifi>=2026.10.19
+# filelock <= 4.2.0: GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and
+# GHSA-v4x8-3wr5-3wq8; 4.2.1 needs Python 3.11, hence the 3.12 compile.
+filelock>=4.2.1

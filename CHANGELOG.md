@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `anyio >= 4.14.2`, `httpx2 >= 2.12.0`, `httpcore2 >= 2.10.0`,
   `pyjwt[crypto] >= 2.15.0`, `opentelemetry-api >= 1.45.1`
   (GHSA-xcq7-p3pf-p88h) and `certifi >= 2026.10.19` (PYSEC-2026-4320).
+- The release toolchain (`requirements/build.txt`, installed only by the
+  release workflow on Python 3.12) floors `filelock >= 4.2.1`
+  (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8); it had
+  pinned 4.0.10. That release needs Python 3.11, so the tree is compiled
+  for 3.12.
 
 ### Fixed
 
@@ -63,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `requirements/docker.txt`.
 - GitHub Actions updated and pinned by commit SHA: checkout 7.0.1,
   setup-python 7.0.0, setup-node 7.1.0, upload-artifact 7.0.2,
-  attest-build-provenance 4.2.2, gh-action-pypi-publish 1.14.2,
+  attest-build-provenance 4.2.2, gh-action-pypi-publish 1.14.3,
   sbom-action 0.24.3, scorecard-action 2.5.0, codeql-action 4.39.0.
 - Development tools: ruff `>=0.1,<0.18`, mypy `>=1.11,<3.0`; the release
   tooling floors `virtualenv>=21.14.8`.
