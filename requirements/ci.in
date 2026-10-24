@@ -37,3 +37,7 @@ interrogate>=1.7.0
 mutmut>=3.7,<4
 radon>=6.0
 complexipy>=8.1
+# Build backend: the package installs with --no-build-isolation, so
+# poetry-core comes from this tree, pinned by hash, rather than from an
+# unpinned isolated build environment (OpenSSF Scorecard Pinned-Dependencies).
+poetry-core

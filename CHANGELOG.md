@@ -54,7 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   0.0.15.
 - Every `pip install` in CI, the docs build and the container image is
   hash-pinned: `requirements/ci.txt`, `docs.txt`, `fuzz.txt` and
-  `docker.txt`, with the package installed `--no-deps` on top.
+  `docker.txt`, with the package installed `--no-deps
+  --no-build-isolation` on top, so its build backend (`poetry-core`)
+  comes from those trees too instead of an unpinned isolated build.
 - The container image runs Python 3.14 (`python:3.14-slim`, pinned by
   digest) and drops the `PACS008_PIP_SPEC` build argument and the git
   client it needed; the runtime dependencies come from

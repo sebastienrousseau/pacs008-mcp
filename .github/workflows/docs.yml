@@ -31,7 +31,7 @@ jobs:
       - name: Install the package and the docs toolchain (hash-pinned)
         run: |
           pip install --require-hashes -r requirements/docs.txt
-          pip install --no-deps .
+          pip install --no-deps --no-build-isolation .
 
       # -W turns every warning into a failure, so a broken cross-reference
       # or an autodoc import error fails the pull request, not the deploy.

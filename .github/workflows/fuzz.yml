@@ -34,7 +34,7 @@ jobs:
       - name: Install fuzz toolchain and this package
         run: |
           pip install --require-hashes -r requirements/fuzz.txt
-          pip install --no-deps -e .
+          pip install --no-deps --no-build-isolation -e .
 
       - name: Fuzz
         env:

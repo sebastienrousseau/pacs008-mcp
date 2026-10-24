@@ -28,11 +28,12 @@ jobs:
 
       # Installs this package editable (so coverage collects). Its runtime
       # dependencies and the test toolchain come hash-pinned from
-      # requirements/ci.txt; the package itself goes on with --no-deps.
+      # requirements/ci.txt; the package itself goes on with --no-deps
+      # --no-build-isolation, so its build backend comes from ci.txt too.
       - name: Install this package
         run: |
           pip install --require-hashes -r requirements/ci.txt
-          pip install --no-deps -e .
+          pip install --no-deps --no-build-isolation -e .
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
@@ -61,7 +62,7 @@ jobs:
       - name: Install this package
         run: |
           pip install --require-hashes -r requirements/ci.txt
-          pip install --no-deps -e .
+          pip install --no-deps --no-build-isolation -e .
 
       - name: Ruff check
         run: ruff check pacs008_mcp/ tests/ benches/ scripts/ fuzz/

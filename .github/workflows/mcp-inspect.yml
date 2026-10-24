@@ -28,7 +28,7 @@ jobs:
       - name: Install pacs008-mcp (hash-pinned dependencies)
         run: |
           pip install --require-hashes -r requirements/ci.txt
-          pip install --no-deps .
+          pip install --no-deps --no-build-isolation .
 
       - name: List tools via MCP Inspector CLI
         run: npx -y @modelcontextprotocol/inspector --cli pacs008-mcp --method tools/list

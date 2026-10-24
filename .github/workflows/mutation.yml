@@ -32,7 +32,7 @@ jobs:
       - name: Install the package, its test tools and mutmut (hash-pinned)
         run: |
           pip install --require-hashes -r requirements/ci.txt
-          pip install --no-deps -e .
+          pip install --no-deps --no-build-isolation -e .
 
       - name: Run the mutants
         env:
