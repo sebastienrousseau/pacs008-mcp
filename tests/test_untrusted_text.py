@@ -59,3 +59,20 @@ def test_parse_message_answers_any_text(xml):
 def test_convert_mt103_answers_any_text(text):
     """Any text gets records or an error payload."""
     assert isinstance(server.convert_mt103(text), dict)
+
+
+def test_validate_xml_answers_an_out_of_range_year_with_error():
+    """elementpath's OverflowError on a year past datetime's range is a payload.
+
+    Atheris found it: a ``CreDtTm`` year with more digits than datetime holds
+    made the XSD validator raise ``OverflowError: year overflow``.
+    """
+    with open("fuzz/corpus/pacs008-generated.xml", encoding="utf-8") as fh:
+        xml = fh.read().replace(
+            "<CreDtTm>2026-01-15T10:30:00</CreDtTm>",
+            "<CreDtTm>99999999999-01-15T10:30:00</CreDtTm>",
+        )
+    assert "99999999999" in xml
+    result = server.validate_xml(MSG_TYPE, xml)
+    assert set(result) == {"error"}
+    assert "OverflowError" in result["error"]

@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   billion laughs) with an `{"error": "refused XML: EntitiesForbidden(...)"}`
   payload. defusedxml's refusal used to escape the tool, so the client saw
   only an opaque "Error executing tool validate_xml".
+- `validate_xml` answers a date whose year is past what the validator can
+  represent (for example `<CreDtTm>99999999999-01-15T10:30:00</CreDtTm>`)
+  with an `{"error": "refused XML: OverflowError('year overflow')"}`
+  payload. elementpath's `OverflowError` used to escape the tool; the
+  Atheris job found it.
 - `scripts/check_suite_consistency.py` compares this tree with the
   published `pacs008-mcp`, not with the `pacs008` core it was copied from,
   so the scheduled Suite Consistency job no longer reports a
