@@ -31,7 +31,11 @@ jobs:
       - name: Install the package and the docs toolchain (hash-pinned)
         run: |
           pip install --require-hashes -r requirements/docs.txt
-          pip install --no-deps --no-build-isolation .
+          # A wheel built here, not `pip install .`: Scorecard counts a
+          # non-editable install of a directory as unpinned, a local wheel
+          # with --no-deps as pinned. The build backend is in the tree above.
+          pip wheel --no-deps --no-build-isolation --wheel-dir wheelhouse .
+          pip install --no-deps wheelhouse/*.whl
 
       # -W turns every warning into a failure, so a broken cross-reference
       # or an autodoc import error fails the pull request, not the deploy.

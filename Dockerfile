@@ -21,11 +21,15 @@ COPY requirements/docker.txt ./requirements/docker.txt
 COPY pacs008_mcp ./pacs008_mcp
 
 # Install the hash-pinned runtime dependencies (poetry-core among them, the
-# build backend), then layer this package on top with --no-deps and
-# --no-build-isolation, inside a self-contained virtualenv.
+# build backend), build this package's wheel against them
+# (--no-build-isolation), and install it with --no-deps, inside a
+# self-contained virtualenv. A local wheel, not `pip install .`: Scorecard
+# counts a non-editable install of a directory as unpinned.
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --require-hashes -r requirements/docker.txt \
-    && /opt/venv/bin/pip install --no-deps --no-build-isolation .
+    && /opt/venv/bin/pip wheel --no-deps --no-build-isolation --wheel-dir /tmp/wheel . \
+    && /opt/venv/bin/pip install --no-deps /tmp/wheel/*.whl \
+    && rm -rf /tmp/wheel
 
 
 FROM python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170
