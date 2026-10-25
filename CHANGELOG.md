@@ -7,6 +7,85 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-10-24
+
+### Security
+
+- `mcp` is constrained to `>=1.30.0,!=2.0.*,!=2.1.*,<3`, so no release
+  affected by GHSA-84m7-p3x7-pcfv (unbounded streamable HTTP session
+  accumulation: mcp `>=1.8.0,<1.30.0` and `>=2.0.0,<2.2.0`) can resolve.
+  The previous `>=1.2,<3` admitted them.
+- Security floors on mcp's transitive stack, matching pain001-mcp:
+  `anyio >= 4.14.2`, `httpx2 >= 2.12.0`, `httpcore2 >= 2.10.0`,
+  `pyjwt[crypto] >= 2.15.0`, `opentelemetry-api >= 1.45.1`
+  (GHSA-xcq7-p3pf-p88h) and `certifi >= 2026.10.19` (PYSEC-2026-4320).
+- The release toolchain (`requirements/build.txt`, installed only by the
+  release workflow on Python 3.12) floors `filelock >= 4.2.1`
+  (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8); it had
+  pinned 4.0.10. That release needs Python 3.11, so the tree is compiled
+  for 3.12.
+
+### Fixed
+
+- `validate_xml` answers a document that declares DTD entities (XXE,
+  billion laughs) with an `{"error": "refused XML: EntitiesForbidden(...)"}`
+  payload. defusedxml's refusal used to escape the tool, so the client saw
+  only an opaque "Error executing tool validate_xml".
+- `validate_xml` answers a date whose year is past what the validator can
+  represent (for example `<CreDtTm>99999999999-01-15T10:30:00</CreDtTm>`)
+  with an `{"error": "refused XML: OverflowError('year overflow')"}`
+  payload. elementpath's `OverflowError` used to escape the tool; the
+  Atheris job found it.
+- `scripts/check_suite_consistency.py` compares this tree with the
+  published `pacs008-mcp`, not with the `pacs008` core it was copied from,
+  so the scheduled Suite Consistency job no longer reports a
+  never-released bump that does not exist.
+
+### Added
+
+- Coverage-guided fuzzing: `fuzz/fuzz_tools.py` (Atheris) feeds arbitrary
+  text to `validate_xml`, `parse_message` and `convert_mt103`, run by the
+  `Fuzz` workflow on every change and for 30 minutes weekly;
+  `tests/test_untrusted_text.py` holds the fixed and property-based cases
+  of the same contract.
+- A complexity gate in the lint job: `scripts/check_complexity.py`
+  (cyclomatic, Halstead, function and file length) and `complexipy`
+  (cognitive), each against a committed baseline of the offenders that
+  predate it, which may only shrink.
+- `docs/POLICIES.md`, the toolchain policy the README's Python badge
+  links to.
+
+### Changed
+
+- Requires `pacs008 >= 0.0.15, < 1` and `pacs008-loader-mt103 >= 0.0.15,
+  < 1` (were `>= 0.0.10` and `>= 0.0.1`): the suite releases in lockstep,
+  and the loader's 0.0.15 parses SWIFT block 4 in linear time
+  (GHSA-4f6g-425r-ff5p). The hash-pinned trees move both from 0.0.12 to
+  0.0.15.
+- Every `pip install` in CI, the docs build and the container image is
+  hash-pinned: `requirements/ci.txt`, `docs.txt`, `fuzz.txt` and
+  `docker.txt`. The package goes on top with `--no-deps
+  --no-build-isolation`, so its build backend (`poetry-core`) comes from
+  those trees too instead of an unpinned isolated build; where the
+  install is not editable (the docs build, the MCP Inspector job and the
+  image), a wheel is built first and installed with `--no-deps`.
+- The container image runs Python 3.14 (`python:3.14-slim`, pinned by
+  digest) and drops the `PACS008_PIP_SPEC` build argument and the git
+  client it needed; the runtime dependencies come from
+  `requirements/docker.txt`.
+- GitHub Actions updated and pinned by commit SHA: checkout 7.0.1,
+  setup-python 7.0.0, setup-node 7.1.0, upload-artifact 7.0.2,
+  attest-build-provenance 4.2.2, gh-action-pypi-publish 1.14.3,
+  sbom-action 0.24.3, scorecard-action 2.5.0, codeql-action 4.39.0.
+- Development tools: ruff `>=0.1,<0.18`, mypy `>=1.11,<3.0`; the release
+  tooling floors `virtualenv>=21.14.8`.
+- The README badge row follows the portfolio template: Build, Registry,
+  Docs, OpenSSF Scorecard, License and Python floor, then Glama.
+- `scripts/verify_versions.py` checks each manifest in its own helper; the
+  output and exit codes are unchanged.
+- `CITATION.cff` and `SECURITY.md` carry the current version again (both
+  had been left at 0.0.12).
+
 ## [0.0.14] - 2026-10-04
 
 ### Changed

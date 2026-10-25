@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Fuzz
+
+# Coverage-guided fuzzing of the text-taking tools with Atheris
+# (fuzz/fuzz_tools.py). A short run on every change; a longer one weekly.
+# A crash fails the job and the reproducer is uploaded.
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, Monday 05:30 UTC.
+    - cron: "30 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  atheris:
+    name: Atheris (text-taking tools)
+    # Atheris ships Linux x86_64 wheels only; fuzz.txt is compiled for it.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install fuzz toolchain and this package
+        run: |
+          pip install --require-hashes -r requirements/fuzz.txt
+          pip install --no-deps --no-build-isolation -e .
+
+      - name: Fuzz
+        env:
+          FUZZ_SECONDS: ${{ github.event_name == 'schedule' && '1800' || '120' }}
+        run: |
+          mkdir -p crashes work-corpus
+          python fuzz/fuzz_tools.py \
+            -max_total_time="$FUZZ_SECONDS" \
+            -max_len=16384 \
+            -artifact_prefix=crashes/ \
+            work-corpus/ fuzz/corpus/
+
+      - name: Upload crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crashes
+          path: crashes/

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "tests/test_suite_conformance.py",
+    "file_name": "test_suite_conformance.py",
+    "functions": [
+      {
+        "name": "_dev_spec",
+        "complexity": 23
+      }
+    ]
+  }
+]

@@ -20,19 +20,22 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install the package and the docs toolchain
+      - name: Install the package and the docs toolchain (hash-pinned)
         run: |
-          python -m pip install --upgrade pip
-          pip install ".[online]"
-          pip install sphinx furo "myst-parser[linkify]" sphinx-autodoc-typehints sphinx-copybutton
+          pip install --require-hashes -r requirements/docs.txt
+          # A wheel built here, not `pip install .`: Scorecard counts a
+          # non-editable install of a directory as unpinned, a local wheel
+          # with --no-deps as pinned. The build backend is in the tree above.
+          pip wheel --no-deps --no-build-isolation --wheel-dir wheelhouse .
+          pip install --no-deps wheelhouse/*.whl
 
       # -W turns every warning into a failure, so a broken cross-reference
       # or an autodoc import error fails the pull request, not the deploy.
@@ -41,7 +44,7 @@ jobs:
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: "docs/_build/html"
 
@@ -59,4 +62,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
