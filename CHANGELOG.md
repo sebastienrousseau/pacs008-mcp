@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8); it had
   pinned 4.0.10. That release needs Python 3.11, so the tree is compiled
   for 3.12.
+- The same tree floors `virtualenv >= 21.14.13` (GHSA-cx6f-vjhg-g3cc: from
+  21.14.9, the bash activator leaves `--prompt` unescaped in `PS1`); it
+  had pinned 21.14.11.
 
 ### Fixed
 
