@@ -34,8 +34,10 @@ jobs:
           pip wheel --no-deps --no-build-isolation --wheel-dir wheelhouse .
           pip install --no-deps wheelhouse/*.whl
 
+      # The Inspector is pinned to an exact release (2.10.1, 2026-10-08) so a new
+      # npm publish cannot change what CI runs; raise it deliberately.
       - name: List tools via MCP Inspector CLI
-        run: npx -y @modelcontextprotocol/inspector --cli pacs008-mcp --method tools/list
+        run: npx --yes @modelcontextprotocol/inspector@2.10.1 --cli pacs008-mcp --method tools/list
 
       - name: Serve streamable HTTP and SSE in the background
         run: |
@@ -48,7 +50,7 @@ jobs:
           done
 
       - name: List tools over streamable HTTP via MCP Inspector CLI
-        run: npx -y @modelcontextprotocol/inspector --cli http://127.0.0.1:8000/mcp --transport http --method tools/list
+        run: npx --yes @modelcontextprotocol/inspector@2.10.1 --cli http://127.0.0.1:8000/mcp --transport http --method tools/list
 
       - name: List tools over SSE via MCP Inspector CLI
-        run: npx -y @modelcontextprotocol/inspector --cli http://127.0.0.1:8001/sse --transport sse --method tools/list
+        run: npx --yes @modelcontextprotocol/inspector@2.10.1 --cli http://127.0.0.1:8001/sse --transport sse --method tools/list

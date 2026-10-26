@@ -114,20 +114,32 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry (hash-pinned)
-        run: pip install --require-hashes -r requirements/build.txt
-
-      - name: Install runtime dependencies
-        run: poetry install --no-interaction --only main
+      # The SBOM describes the shipped runtime set: the hash-pinned
+      # requirements/docker.txt the image installs, plus the package, in a
+      # venv of its own. poetry.lock is not committed here, so `poetry
+      # install` would resolve afresh, and `poetry run` would point the SBOM
+      # tools at their own interpreter.
+      - name: Install runtime dependencies (hash-pinned)
+        run: |
+          python -m venv "$RUNNER_TEMP/runtime"
+          . "$RUNNER_TEMP/runtime/bin/activate"
+          pip install --require-hashes -r requirements/docker.txt
+          # A wheel built here, not `pip install .`: Scorecard counts a
+          # non-editable install of a directory as unpinned, a local wheel
+          # with --no-deps as pinned. The build backend is in the tree above.
+          pip wheel --no-deps --no-build-isolation --wheel-dir wheelhouse .
+          pip install --no-deps wheelhouse/*.whl
+          pip check
 
       - name: Install SBOM + license tooling (hash-pinned)
         run: pip install --require-hashes -r requirements/sbom.txt
 
       - name: Generate CycloneDX SBOM (JSON)
         run: |
-          poetry run cyclonedx-py environment \
+          cyclonedx-py environment \
             --of JSON \
-            -o "pacs008-mcp-${RELEASE_TAG}.cdx.json"
+            -o "pacs008-mcp-${RELEASE_TAG}.cdx.json" \
+            "$RUNNER_TEMP/runtime/bin/python"
 
       - name: Generate SPDX SBOM (JSON)
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
@@ -139,7 +151,7 @@ jobs:
 
       - name: Generate pip-licenses manifest
         run: |
-          poetry run pip-licenses \
+          pip-licenses --python "$RUNNER_TEMP/runtime/bin/python" \
             --format=json \
             --with-urls --with-license-file --no-license-path \
             --output-file "pacs008-mcp-${RELEASE_TAG}.licenses.json"

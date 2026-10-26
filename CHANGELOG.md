@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- The release SBOMs (CycloneDX and the pip-licenses manifest) describe
+  the shipped runtime set: the hash-pinned `requirements/docker.txt` the
+  image installs, plus the package as a local wheel, in a venv of their
+  own. `poetry install` had resolved afresh (no `poetry.lock` is
+  committed here), and `poetry run` pointed the SBOM tools at their own
+  interpreter, so the SBOM listed the tooling, not the runtime set.
+- The MCP Inspector conformance job pins `@modelcontextprotocol/inspector`
+  to 2.10.1, so a new npm publish cannot change what CI runs.
+
 ## [0.0.15] - 2026-10-24
 
 ### Security
