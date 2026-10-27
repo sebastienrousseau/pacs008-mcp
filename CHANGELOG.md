@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The MCP Inspector conformance job pins `@modelcontextprotocol/inspector`
   to 2.10.1, so a new npm publish cannot change what CI runs.
 
+### Removed
+
+- Python 3.10 is no longer supported: the floor is 3.11
+  (`python = ">=3.11,<4.0"`), in step with the `pacs008` core, as 3.10
+  reaches end of life in October 2026. CI tests 3.11 to 3.14; ruff,
+  black and mypy target 3.11. The `tomli` fallback in
+  `scripts/check_suite_consistency.py` and `tests/test_package_version.py`
+  goes, with its dev dependency, and `requirements/ci.txt` and
+  `sbom.txt` are compiled for 3.11, dropping their 3.10-only lines
+  (exceptiongroup, toml, `tomli` in `sbom.txt`, and the older httpx2,
+  httpcore2, hypothesis, starlette, websockets, platformdirs and rpds-py
+  pins).
+
 ## [0.0.15] - 2026-10-24
 
 ### Security

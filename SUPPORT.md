@@ -44,4 +44,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [GOVERNANCE.md](GOVERNANCE.md).
 ## Supported versions
 
 Fixes land on the latest release line. See [SECURITY.md](SECURITY.md) for
-the supported-version policy. pacs008-mcp requires Python 3.10+.
+the supported-version policy. pacs008-mcp requires Python 3.11+.

@@ -32,14 +32,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tomllib
 import urllib.error
 import urllib.request
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:  # pragma: no cover - exercised only on the 3.10 floor
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
 

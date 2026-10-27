@@ -39,7 +39,7 @@ type or skip a validation gate.
 ## Install
 
 ```sh
-pip install pacs008-mcp            # Python 3.10+
+pip install pacs008-mcp            # Python 3.11+
 pip install 'pacs008-mcp[online]'  # adds httpx for verify_bic_online
 ```
 
