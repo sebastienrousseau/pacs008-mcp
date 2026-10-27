@@ -84,6 +84,8 @@ jobs:
               "$f"
           done
 
+      # The title is the project name and the bare version, never the tag
+      # (pacs008-mcp 0.0.X, not v0.0.X).
       - name: Publish release artifacts to GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +93,7 @@ jobs:
           if gh release view "${RELEASE_TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             gh release upload "${RELEASE_TAG}" dist/* --repo "${{ github.repository }}" --clobber
           else
-            gh release create "${RELEASE_TAG}" dist/* --repo "${{ github.repository }}" --title "${RELEASE_TAG}" --generate-notes
+            gh release create "${RELEASE_TAG}" dist/* --repo "${{ github.repository }}" --title "pacs008-mcp ${RELEASE_TAG#v}" --generate-notes
           fi
 
   sbom:
