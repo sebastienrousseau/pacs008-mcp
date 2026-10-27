@@ -26,10 +26,10 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.15**: 16 MCP tools over stdio, streamable HTTP or
-> SSE, all backed by the `pacs008` library, for Python 3.10+. `validate_xml`
-> now refuses DTD entities with an error payload, and every CI and image
-> install is hash-pinned.
+> **Latest release: v0.0.16**: 16 MCP tools over stdio, streamable HTTP or
+> SSE, all backed by the `pacs008` library, for Python 3.11+ (3.10 is no
+> longer supported). The release SBOMs now describe the runtime set the
+> image ships, not the build tooling.
 
 ## Contents
 

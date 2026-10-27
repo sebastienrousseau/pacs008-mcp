@@ -13,8 +13,8 @@ authors:
   - family-names: Rousseau
     given-names: Sebastien
     email: sebastian.rousseau@gmail.com
-version: "0.0.15"
-date-released: "2026-10-24"
+version: "0.0.16"
+date-released: "2026-10-27"
 license: "Apache-2.0 OR MIT"
 repository-code: "https://github.com/sebastienrousseau/pacs008-mcp"
 url: "https://pacs008.com"

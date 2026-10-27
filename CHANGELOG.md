@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.16] - 2026-10-27
+
+Python 3.11 floor and release-evidence release, in lockstep with
+`pacs008` 0.0.16. Python 3.10 is no longer supported (see Removed).
+
+### Changed
+
+- The GitHub release is titled `pacs008-mcp X.Y.Z` (the project name and
+  the bare version), not the tag.
+
 ### Security
 
 - The release SBOMs (CycloneDX and the pip-licenses manifest) describe
@@ -379,6 +389,9 @@ entry was written at the time.
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[Unreleased]: https://github.com/sebastienrousseau/pacs008-mcp/compare/v0.0.16...HEAD
+[0.0.16]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.16
+[0.0.15]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.15
 [0.0.14]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.14
 [0.0.13]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.13
 [0.0.12]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.12
