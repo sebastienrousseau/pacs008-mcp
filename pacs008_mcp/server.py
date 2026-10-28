@@ -508,7 +508,7 @@ def validate_xml(
     use ``generate_message`` instead.
 
     Returns ``{"message_type": str, "is_valid": bool}``, or ``{"error":
-    ...}`` for an unsupported type, DTD entities or an out-of-range date.
+    ...}`` for an unsupported type or DTD entities; a bad year is invalid.
 
     Args:
         message_type: A supported ISO 20022 pacs message type.
@@ -517,9 +517,9 @@ def validate_xml(
     if message_type not in valid_xml_types:
         return {"error": f"Invalid message type: {message_type}"}
     _, xsd_path = _resolve_template_paths(message_type)
-    try:  # DTD entities raise ValueError; an out-of-range year, OverflowError
+    try:  # DTD entities raise ValueError
         is_valid = validate_xml_string_via_xsd(xml, xsd_path)
-    except (ValueError, OverflowError) as exc:
+    except ValueError as exc:
         return {"error": f"refused XML: {exc!r}"}
     return {"message_type": message_type, "is_valid": is_valid}
 

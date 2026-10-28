@@ -14,8 +14,17 @@ Python 3.11 floor and release-evidence release, in lockstep with
 
 ### Changed
 
+- `pacs008 >= 0.0.16, < 1` and `pacs008-loader-mt103 >= 0.0.16, < 1`:
+  the suite members of the same release, so an older core or loader and
+  the advisory floors they declare cannot resolve under this one. The
+  hash-pinned `requirements/` trees are re-locked against them.
 - The GitHub release is titled `pacs008-mcp X.Y.Z` (the project name and
   the bare version), not the tag.
+- `validate_xml` answers a document whose date has a year past what the
+  validator can represent with `{"message_type": ..., "is_valid": false}`,
+  not an `{"error": "refused XML: OverflowError(...)"}` payload: pacs008
+  0.0.16 reports that date as invalid instead of letting elementpath's
+  `OverflowError` escape, so the tool no longer catches it.
 
 ### Security
 
