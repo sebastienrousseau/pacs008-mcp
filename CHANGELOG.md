@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.16] - 2026-10-27
+
+Python 3.11 floor and release-evidence release, in lockstep with
+`pacs008` 0.0.16. Python 3.10 is no longer supported (see Removed).
+
+### Changed
+
+- `pacs008 >= 0.0.16, < 1` and `pacs008-loader-mt103 >= 0.0.16, < 1`:
+  the suite members of the same release, so an older core or loader and
+  the advisory floors they declare cannot resolve under this one. The
+  hash-pinned `requirements/` trees are re-locked against them.
+- The GitHub release is titled `pacs008-mcp X.Y.Z` (the project name and
+  the bare version), not the tag.
+- `validate_xml` answers a document whose date has a year past what the
+  validator can represent with `{"message_type": ..., "is_valid": false}`,
+  not an `{"error": "refused XML: OverflowError(...)"}` payload: pacs008
+  0.0.16 reports that date as invalid instead of letting elementpath's
+  `OverflowError` escape, so the tool no longer catches it.
+
 ### Security
 
 - The release SBOMs (CycloneDX and the pip-licenses manifest) describe
@@ -17,6 +36,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   interpreter, so the SBOM listed the tooling, not the runtime set.
 - The MCP Inspector conformance job pins `@modelcontextprotocol/inspector`
   to 2.10.1, so a new npm publish cannot change what CI runs.
+
+### Removed
+
+- Python 3.10 is no longer supported: the floor is 3.11
+  (`python = ">=3.11,<4.0"`), in step with the `pacs008` core, as 3.10
+  reaches end of life in October 2026. CI tests 3.11 to 3.14; ruff,
+  black and mypy target 3.11. The `tomli` fallback in
+  `scripts/check_suite_consistency.py` and `tests/test_package_version.py`
+  goes, with its dev dependency, and `requirements/ci.txt` and
+  `sbom.txt` are compiled for 3.11, dropping their 3.10-only lines
+  (exceptiongroup, toml, `tomli` in `sbom.txt`, and the older httpx2,
+  httpcore2, hypothesis, starlette, websockets, platformdirs and rpds-py
+  pins).
 
 ## [0.0.15] - 2026-10-24
 
@@ -366,6 +398,9 @@ entry was written at the time.
 - `glama.json`, `server.json` (MCP Registry metadata), and a `Dockerfile` for
   directory listing, registry publication, and container deployment.
 
+[Unreleased]: https://github.com/sebastienrousseau/pacs008-mcp/compare/v0.0.16...HEAD
+[0.0.16]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.16
+[0.0.15]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.15
 [0.0.14]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.14
 [0.0.13]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.13
 [0.0.12]: https://github.com/sebastienrousseau/pacs008-mcp/releases/tag/v0.0.12

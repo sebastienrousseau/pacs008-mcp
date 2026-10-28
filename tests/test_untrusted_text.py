@@ -61,13 +61,13 @@ def test_convert_mt103_answers_any_text(text):
     assert isinstance(server.convert_mt103(text), dict)
 
 
-def test_validate_xml_answers_an_out_of_range_year_with_error(sample_record):
-    """elementpath's OverflowError on a year past datetime's range is a payload.
+def test_validate_xml_reports_an_out_of_range_year_as_invalid(sample_record):
+    """A year past datetime's range makes the document invalid, not an error.
 
     Atheris found it: a ``CreDtTm`` year with more digits than datetime holds
-    made the XSD validator raise ``OverflowError: year overflow``. The
-    document is generated here, not read from fuzz/corpus, which mutmut's
-    working copy does not carry.
+    made the XSD validator raise ``OverflowError: year overflow``. pacs008
+    0.0.16 reports that date as invalid. The document is generated here,
+    not read from fuzz/corpus, which mutmut's working copy does not carry.
     """
     xml = server.generate_message(MSG_TYPE, [sample_record]).replace(
         "<CreDtTm>2026-01-15T10:30:00</CreDtTm>",
@@ -75,5 +75,4 @@ def test_validate_xml_answers_an_out_of_range_year_with_error(sample_record):
     )
     assert "99999999999" in xml
     result = server.validate_xml(MSG_TYPE, xml)
-    assert set(result) == {"error"}
-    assert "OverflowError" in result["error"]
+    assert result == {"message_type": MSG_TYPE, "is_valid": False}

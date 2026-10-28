@@ -2,7 +2,7 @@
 """Example: call the pacs008-mcp server's tools in-process.
 
 Usage:
-    pip install pacs008-mcp     # requires Python 3.10+
+    pip install pacs008-mcp     # requires Python 3.11+
     python examples/mcp_tools.py
 
 The pacs008 MCP server (launched as ``pacs008-mcp`` over stdio) exposes the

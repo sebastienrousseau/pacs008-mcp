@@ -11,7 +11,7 @@
   <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pacs008-mcp"><img src="https://img.shields.io/ossf-scorecard/github.com/sebastienrousseau/pacs008-mcp?style=for-the-badge&label=OpenSSF%20Scorecard&logo=openssf" alt="OpenSSF Scorecard" height="28" /></a>
   <a href="https://www.bestpractices.dev/projects/15824"><img src="https://img.shields.io/cii/level/15824?style=for-the-badge&label=OpenSSF%20Best%20Practices&logo=openssf" alt="OpenSSF Best Practices" height="28" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg?style=for-the-badge" alt="License: Apache-2.0 OR MIT" height="28" /></a>
-  <a href="https://github.com/sebastienrousseau/pacs008-mcp/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.10%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.10 or newer" height="28" /></a>
+  <a href="https://github.com/sebastienrousseau/pacs008-mcp/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.11%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.11 or newer" height="28" /></a>
   <a href="https://glama.ai/mcp/servers/sebastienrousseau/pacs008-mcp"><img src="https://img.shields.io/badge/Glama-MCP%20server-6c5ce7?style=for-the-badge" alt="Glama MCP server listing" height="28" /></a>
 </p>
 
@@ -26,10 +26,10 @@ against the JSON Schema and against a rail's usage guidelines, generate
 validated XML, validate raw XML against the bundled XSD, and parse inbound
 messages, all from your favourite MCP client.
 
-> **Latest release: v0.0.15**: 16 MCP tools over stdio, streamable HTTP or
-> SSE, all backed by the `pacs008` library, for Python 3.10+. `validate_xml`
-> now refuses DTD entities with an error payload, and every CI and image
-> install is hash-pinned.
+> **Latest release: v0.0.16**: 16 MCP tools over stdio, streamable HTTP or
+> SSE, all backed by the `pacs008` library, for Python 3.11+ (3.10 is no
+> longer supported). The release SBOMs now describe the runtime set the
+> image ships, not the build tooling.
 
 ## Contents
 
@@ -74,7 +74,7 @@ flowchart LR
 
 ## Install
 
-**pacs008-mcp** runs on macOS, Linux, and Windows and requires **Python 3.10+**
+**pacs008-mcp** runs on macOS, Linux, and Windows and requires **Python 3.11+**
 and **pip**. It pulls in the core `pacs008` library and the MCP SDK
 automatically.
 

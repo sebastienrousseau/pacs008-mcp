@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pacs008-mcp"
-version = "0.0.15"
+version = "0.0.16"
 description = "Model Context Protocol (MCP) server exposing the pacs008 ISO 20022 FI-to-FI Customer Credit Transfer library as agent tools."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0 OR MIT"
@@ -18,11 +18,11 @@ include = [
 pacs008-mcp = "pacs008_mcp.server:main"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = ">=3.11,<4.0"
 # The suite releases in lockstep: this server needs the core and the MT103
 # loader of its own version.
-pacs008 = ">=0.0.15,<1"
-pacs008-loader-mt103 = ">=0.0.15,<1"
+pacs008 = ">=0.0.16,<1"
+pacs008-loader-mt103 = ">=0.0.16,<1"
 # mcp < 1.30.0 and 2.0.x/2.1.x are affected by GHSA-84m7-p3x7-pcfv
 # (unbounded streamable HTTP session accumulation; this server serves
 # streamable HTTP), so no affected release can resolve.
@@ -55,9 +55,6 @@ online = ["httpx"]
 
 [tool.poetry.group.dev.dependencies]
 packaging = ">=23.0"
-# `tomllib` is stdlib only from 3.11; the version guard test
-# needs a TOML reader on the 3.10 leg of the matrix.
-tomli = { version = ">=2.0", python = "<3.11" }
 pytest = ">=9.0.3,<10.0.0"
 pytest-cov = ">=6.0.0,<8.0.0"
 black = "^26.3.1"
@@ -99,7 +96,7 @@ build-backend = "poetry.core.masonry.api"
 # so reformatting it would invalidate the check it exists to make.
 extend-exclude = "tests/test_suite_conformance\\.py"
 line-length = 79
-target-version = ['py310']
+target-version = ['py311']
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -166,7 +163,7 @@ skip_covered = false
 
 [tool.ruff]
 line-length = 79
-target-version = "py310"
+target-version = "py311"
 extend-exclude = ["*.md", "tmp_env", ".venv", ".eggs"]
 
 [tool.ruff.lint]
@@ -180,6 +177,11 @@ ignore = ["E501"]
 "benches/*.py" = ["E402"]
 "__init__.py" = ["F401"]
 "tests/conftest.py" = ["E402"]
+# The vendored suite conformance file is byte-pinned to its canonical
+# copy (black excludes it above for the same reason) and keeps a tomli
+# fallback for the suite's 3.10 floor; with this repository on 3.11 that
+# branch is dead, and the fix belongs in the canonical copy, not here.
+"tests/test_suite_conformance.py" = ["UP036"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -187,7 +189,7 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

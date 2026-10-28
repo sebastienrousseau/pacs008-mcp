@@ -1696,15 +1696,15 @@ packaging==26.3 \
     #   black
     #   pytest
     #   sphinx
-pacs008==0.0.15 \
-    --hash=sha256:39c9f2782990ee02d263707413e565b3db3d6982abae14ae239a4664d70a0cfb \
-    --hash=sha256:e5c91e5ce8e7538db8dddf4bc1612c117108f584d3d83c0218634bb777e61220
+pacs008==0.0.16 \
+    --hash=sha256:d8676af59b33b7d1b2fb5ecf72dd6c76ffaecdf4a6f5182430a54845937d9994 \
+    --hash=sha256:e350e1640b8d248bae9025bde8f78cbe7a07e0142ec8e0817fe86b9c504e4915
     # via
     #   -r requirements/ci.in
     #   pacs008-loader-mt103
-pacs008-loader-mt103==0.0.15 \
-    --hash=sha256:7897a1e99707c1a0d2240c95f071b16c0bef75087d5c749f709347e913fcf9a8 \
-    --hash=sha256:b92a75e47f9bd1b5fa05b60e5c19e0c50eb6cfed5c9b83a4c3a8b061fd9e82de
+pacs008-loader-mt103==0.0.16 \
+    --hash=sha256:0a0e57d2a51f594c17bd6b161d59592dd3e692e62774f3fbb38fdf50e29f3c84 \
+    --hash=sha256:7f608f4639afa79e0838094a84aa322af92e14c2ee85d020427e829f05c7aa3e
     # via -r requirements/ci.in
 pathspec==1.1.1 \
     --hash=sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a \

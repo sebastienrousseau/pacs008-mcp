@@ -6,11 +6,11 @@
 # `--no-deps` on top of this, so its runtime dependencies are listed here
 # with the ranges pyproject.toml declares.
 # Regenerate:
-#   uv pip compile --generate-hashes --universal --python-version 3.10 \
+#   uv pip compile --generate-hashes --universal --python-version 3.11 \
 #     requirements/ci.in -o requirements/ci.txt
 # Runtime (pyproject [tool.poetry.dependencies] plus the `online` extra).
-pacs008>=0.0.15,<1
-pacs008-loader-mt103>=0.0.15,<1
+pacs008>=0.0.16,<1
+pacs008-loader-mt103>=0.0.16,<1
 # GHSA-84m7-p3x7-pcfv: mcp <1.30.0 and 2.0.x/2.1.x are affected.
 mcp>=1.30.0,!=2.0.*,!=2.1.*,<3
 httpx>=0.24,<1
@@ -26,7 +26,6 @@ certifi>=2026.10.19
 pytest>=9.0.3,<10.0.0
 pytest-cov>=6.0.0,<8.0.0
 packaging>=23.0
-tomli>=2.0 ; python_version < "3.11"
 respx>=0.21,<1
 hypothesis>=6.100,<7
 # Lint, format, types, docstrings, mutation, complexity.
