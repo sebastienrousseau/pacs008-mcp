@@ -78,7 +78,7 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 sphinx = ">=7,<10"
 furo = ">=2024.1"
-myst-parser = { version = ">=3,<5", extras = ["linkify"] }
+myst-parser = { version = ">=3,<6", extras = ["linkify"] }
 sphinx-autodoc-typehints = ">=2,<4"
 sphinx-copybutton = ">=0.5,<1"
 
